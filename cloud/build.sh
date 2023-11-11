@@ -1,0 +1,1 @@
+ docker build -t cloud-node -f src/docker/Dockerfile .

@@ -1,0 +1,1 @@
+ docker build -t client -f src/docker/Dockerfile .

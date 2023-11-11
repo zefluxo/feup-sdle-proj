@@ -1,0 +1,6 @@
+services:
+  client:
+    image: client
+    scale: 2
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
