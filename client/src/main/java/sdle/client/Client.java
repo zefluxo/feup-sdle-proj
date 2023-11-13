@@ -13,7 +13,7 @@ public class Client {
             for (int requestNbr = 0; requestNbr != 30; requestNbr++) {
                 // neste exemplo fazendo a conexao dentro do loop apenas vez para verificar o funcionalmento do load balance
                 ZMQ.Socket socket = context.createSocket(SocketType.REQ);
-                socket.connect("tcp://host.docker.internal:5555");
+                socket.connect("tcp://host.docker.internal:7777");
 
                 String request = String.format("Hello (client %s)", System.getenv("HOSTNAME"));
                 System.out.println("Sending Hello " + requestNbr);
