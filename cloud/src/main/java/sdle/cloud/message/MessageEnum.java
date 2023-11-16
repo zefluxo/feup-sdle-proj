@@ -4,12 +4,12 @@ public enum MessageEnum {
 
 
     // Messages of shopping list operation
-    GET_ITEM("getItem", MessageType.SHOPPING_LIST),
-    PUT_ITEM("putItem", MessageType.SHOPPING_LIST),
-    DELETE_ITEM("deleteItem", MessageType.SHOPPING_LIST),
-    GET_LIST("getList", MessageType.SHOPPING_LIST),
-    PUT_LIST("putList", MessageType.SHOPPING_LIST),
-    DELETE_LIST("deleteList", MessageType.SHOPPING_LIST),
+    GET_ITEM("getItem", MessageType.SHOPP_LIST),
+    PUT_ITEM("putItem", MessageType.SHOPP_LIST),
+    DELETE_ITEM("deleteItem", MessageType.SHOPP_LIST),
+    GET_LIST("getList", MessageType.SHOPP_LIST),
+    PUT_LIST("putList", MessageType.SHOPP_LIST),
+    DELETE_LIST("deleteList", MessageType.SHOPP_LIST),
 
     // cluster internal messages
     CLUSTER_JOIN("cluster_join", MessageType.MEMBERSHIP),

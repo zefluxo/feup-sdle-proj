@@ -1,11 +1,10 @@
 package sdle.client;
 
 import org.zeromq.SocketType;
-import org.zeromq.ZMQ;
 import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
 
 import java.util.Random;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -29,13 +28,13 @@ public class Client {
     private static void sendRequest(ZContext context, int requestNbr) {
         // neste exemplo fazendo a conexao dentro do loop apenas vez para verificar o funcionalmento do load balance
         ZMQ.Socket socket = context.createSocket(SocketType.REQ);
-        socket.setIdentity((Thread.currentThread().getName() +new Random().nextInt(1000)).getBytes(ZMQ.CHARSET));
+        socket.setIdentity((Thread.currentThread().getName() + new Random().nextInt(1000)).getBytes(ZMQ.CHARSET));
         socket.connect("tcp://host.docker.internal:7777");
 
         String request = String.format("Hello (client %s)", System.getenv("HOSTNAME"));
         System.out.println("Sending Hello " + requestNbr);
 
-        socket.sendMore("putListsss");
+        socket.sendMore("putList");
         socket.send(request);
 
         String reply = socket.recvStr();
