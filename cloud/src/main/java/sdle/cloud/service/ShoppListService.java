@@ -1,14 +1,21 @@
 package sdle.cloud.service;
 
+import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
 import sdle.cloud.message.CommandEnum;
 import sdle.cloud.message.CommandType;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ShoppListService extends BaseService {
-    public ShoppListService(Node node) {
-        super(node);
+
+    // TODO: simplificacao da shopping list usada aqui apenas para avancar no mecanismo de particionamento do cluster
+    private final Map<String, String> shoppLists = new HashMap<>();
+
+    public ShoppListService(Node node, Cluster cluster) {
+        super(node, cluster);
     }
 
     @Override
@@ -32,26 +39,16 @@ public class ShoppListService extends BaseService {
         } else {
             switch (messageEnum) {
                 case PUT_LIST -> {
+                    String hash = String.valueOf(msg.get(3).hashCode());
+
                     response = String.format("adicionada nova lista %s", msg.get(3));
                 }
-                case GET_LIST -> {
-                    response = String.format("retornando a lista %s", msg.get(3));
-                }
-                case DELETE_LIST -> {
-                    response = String.format("apagando a lista %s", msg.get(3));
-                }
-                case PUT_ITEM -> {
-                    response = String.format("adicionado item %s à lista %s", msg.get(4), msg.get(3));
-                }
-                case GET_ITEM -> {
-                    response = String.format("retornando item %s da lista %s", msg.get(4), msg.get(3));
-                }
-                case DELETE_ITEM -> {
-                    response = String.format("apagando o item %s da lista %s", msg.get(4), msg.get(3));
-                }
-                default -> {
-                    response = String.format("message [%s] not found", msg.get(2));
-                }
+                case GET_LIST -> response = String.format("retornando a lista %s", msg.get(3));
+                case DELETE_LIST -> response = String.format("apagando a lista %s", msg.get(3));
+                case PUT_ITEM -> response = String.format("adicionado item %s à lista %s", msg.get(4), msg.get(3));
+                case GET_ITEM -> response = String.format("retornando item %s da lista %s", msg.get(4), msg.get(3));
+                case DELETE_ITEM -> response = String.format("apagando o item %s da lista %s", msg.get(4), msg.get(3));
+                default -> response = String.format("message [%s] not found", msg.get(2));
             }
         }
         System.out.println(response);

@@ -1,5 +1,6 @@
 package sdle.cloud;
 
+import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
 import sdle.cloud.service.ClusterService;
 import sdle.cloud.service.ShoppListService;
@@ -27,8 +28,9 @@ public class Server {
                 System.getenv().getOrDefault("SDLE_NODE_CLUSTER_PORT", DEFAULT_CLUSTER_PORT),
                 System.getenv().getOrDefault("SDLE_NODE_BOOTSTRAP", DEFAULT_BOOTSTRAP));
         System.out.printf("Initializing Node (%s)%n", node);
-        ClusterService clusterService = new ClusterService(node);
-        ShoppListService shoppListService = new ShoppListService(node);
+        Cluster cluster = new Cluster();
+        ClusterService clusterService = new ClusterService(node, cluster);
+        ShoppListService shoppListService = new ShoppListService(node, cluster);
         servicesExecutor.submit(clusterService::init);
         servicesExecutor.submit(shoppListService::init);
     }

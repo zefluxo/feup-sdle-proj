@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
+import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
 
 import java.util.ArrayList;
@@ -21,6 +22,9 @@ public abstract class BaseService {
 
     @Getter(AccessLevel.PROTECTED)
     private final Node node;
+
+    @Getter(AccessLevel.PROTECTED)
+    private final Cluster cluster;
 
     @Getter(AccessLevel.PROTECTED)
     private ZMQ.Socket socket;
