@@ -41,11 +41,13 @@ public abstract class BaseService {
                 do {
                     msg.add(socket.recvStr());
                 } while (socket.hasReceiveMore());
-                System.out.println("receive: " + msg);
+                System.out.printf("[%s,%s] receive: %s%n", node.getIp(), getServicePort(), msg);
                 executor.execute(() -> processMsg(msg));
             }
         }
     }
+
+//    abstract protected void onInterrupt();
 
     abstract protected String getServicePort();
 

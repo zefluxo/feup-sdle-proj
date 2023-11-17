@@ -7,16 +7,24 @@ import org.zeromq.ZMQ;
 import sdle.cloud.cluster.Node;
 import sdle.cloud.message.CommandEnum;
 import sdle.cloud.message.CommandType;
+import sun.misc.Signal;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ClusterService extends BaseService {
-    private final Map<String, Object> clusterNodes = new HashMap<String, Object>();
+    public static final String REPLY_OK = "OK";
+    private final ZContext context = new ZContext();
+    private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
+    private Map<String, Object> clusterNodes = new ConcurrentHashMap<>();
     private ZMQ.Socket clusterClientSocket;
-    private int nextHostname = 0;
+    private int nextHost = 0;
 
     public ClusterService(Node node) {
         super(node);
@@ -25,20 +33,27 @@ public class ClusterService extends BaseService {
     @Override
     public void init() {
         super.init();
-        try (ZContext context = new ZContext()) {
-            clusterClientSocket = context.createSocket(SocketType.REQ);
-            clusterClientSocket.setIdentity((Thread.currentThread().getName() + new Random().nextInt(1000)).getBytes(ZMQ.CHARSET));
+        clusterClientSocket = context.createSocket(SocketType.REQ);
+        clusterClientSocket.setIdentity((Thread.currentThread().getName() + new Random().nextInt(1000)).getBytes(ZMQ.CHARSET));
 
-            clusterNodes.put(getNode().getId(), getNode().getIp());
-            joinCluster();
-        }
+        clusterNodes.put(getNode().getId(), getNode().getIp());
+        scheduledExecutor.schedule(this::joinCluster, 2, TimeUnit.SECONDS);
+        scheduledExecutor.scheduleWithFixedDelay(this::printStatus, 10, 30, TimeUnit.SECONDS);
+
+        Signal.handle(new Signal("TERM"), signal -> onInterrupt());
+//        Signal.handle(new Signal("INT"), signal -> onInterrupt());
+
+    }
+
+    private void printStatus() {
+        System.out.println(clusterNodes);
     }
 
     private void joinCluster() {
         JSONObject nodeJson = new JSONObject();
         nodeJson.put(getNode().getId(), getNode().getIp());
-        String reply = sendMsg(CommandEnum.CLUSTER_JOIN, nodeJson.toString());
-        System.out.printf("New cluster : %s", reply);
+        sendMsg(getNextBootstrapHostAddr(), CommandEnum.CLUSTER_JOIN, nodeJson.toString());
+        System.out.println("Node added to cluster");
     }
 
     @Override
@@ -46,21 +61,35 @@ public class ClusterService extends BaseService {
         return getNode().getClusterPort();
     }
 
-    private String getNextBootstrapHostname() {
-        nextHostname = (nextHostname + 1) % getNode().getBootstrapList().size();
-        return getNode().getBootstrapList().get(nextHostname);
+    protected void onInterrupt() {
+        System.out.println("terminating and leaving cluster");
+        clusterNodes.values().forEach(ip -> {
+            JSONObject nodeJson = new JSONObject();
+            nodeJson.put(getNode().getId(), getNode().getIp());
+            sendMsg(getNextBootstrapHostAddr(), CommandEnum.CLUSTER_LEAVE, nodeJson.toString());
+        });
     }
 
-    private String sendMsg(CommandEnum commandEnum, String msg) {
-        String destHostname = getNextBootstrapHostname();
-        System.out.printf("Sending command %s:%s to %s%n", commandEnum, msg, destHostname);
-        clusterClientSocket.connect(get0MQAddr(destHostname, getNode().getClusterPort())); // TODO: implementar retentativas em caso de falhas
+    private String getNextBootstrapHostAddr() {
+        String hostAddr = getNode().getIp();
+        while (Objects.equals(hostAddr, getNode().getIp())) {
+            hostAddr = getNode().getBootstrapList().get(nextHost);
+            nextHost = (nextHost + 1) % getNode().getBootstrapList().size();
+        }
+        return hostAddr;
+    }
+
+    private String sendMsg(String dest, CommandEnum commandEnum, String msg) {
+        System.out.printf("Sending command %s:%s to %s%n", commandEnum, msg, dest);
+        String addr = get0MQAddr(dest, getNode().getClusterPort());
+        clusterClientSocket.connect(addr); // TODO: implementar retentativas em caso de falhas ???
         clusterClientSocket.sendMore(commandEnum.cmd());
         clusterClientSocket.send(msg);
 
-        System.out.printf("Command %s:%s sent to %s%n", commandEnum, msg, destHostname);
+        System.out.printf("Command %s:%s sent to %s%n", commandEnum, msg, dest);
         String reply = clusterClientSocket.recvStr();
         System.out.printf("Received %s%n", reply);
+        clusterClientSocket.disconnect(addr);
         return reply;
     }
 
@@ -68,35 +97,54 @@ public class ClusterService extends BaseService {
     protected void processMsg(List<String> msg) {
         System.out.printf("processing cluster msg: %s%n", msg);
         CommandEnum messageEnum = CommandEnum.getMessage(msg.get(2));
-        StringBuilder response;
+        StringBuilder reply;
+        boolean needsUpdate = false;
         if (!CommandType.MEMBERSHIP.equals(messageEnum.cmdType())) {
-            response = new StringBuilder(String.format("message [%s] not recognized", msg.get(2)));
+            reply = new StringBuilder(String.format("message [%s] not recognized", msg.get(2)));
         } else {
 
             switch (messageEnum) {
                 case CLUSTER_JOIN -> {
-//                    JSONObject argsJson = ;
                     System.out.println(msg.get(3));
-                    clusterNodes.putAll(new JSONObject(msg.get(3)).toMap());
-                    response = new StringBuilder(new JSONObject(clusterNodes).toString());
+                    synchronized (this) {
+                        clusterNodes.putAll(new JSONObject(msg.get(3)).toMap());
+                    }
+                    reply = new StringBuilder(REPLY_OK);
+                    needsUpdate = true;
                 }
                 case CLUSTER_LEAVE -> {
-                    response = new StringBuilder(String.format("retornando a lista %s", msg.get(3)));
+                    synchronized (this) {
+                        clusterNodes.remove(new JSONObject(msg.get(3)).keys().next());
+                    }
+                    reply = new StringBuilder(REPLY_OK);
+                    needsUpdate = true;
                 }
-                case CLUSTER_JOIN_RESPONSE -> {
-                    response = new StringBuilder(String.format("apagando a lista %s", msg.get(3)));
-                }
-                case CLUSTER_LEAVE_RESPONSE -> {
-                    response = new StringBuilder(String.format("adicionado item %s à lista %s", msg.get(4), msg.get(3)));
+                case CLUSTER_UPDATE -> {
+                    System.out.println(msg.get(3));
+                    synchronized (this) {
+                        clusterNodes = new JSONObject(msg.get(3)).toMap();
+                    }
+                    System.out.printf("Cluster updated : %s%n", clusterNodes);
+                    reply = new StringBuilder(REPLY_OK);
                 }
                 default -> {
-                    response = new StringBuilder(String.format("command [%s] not implemented", msg.get(2)));
+                    reply = new StringBuilder(String.format("command [%s] not implemented", msg.get(2)));
                 }
             }
         }
-        System.out.println(response);
+        System.out.println(reply);
         getSocket().sendMore(msg.get(0));
         getSocket().sendMore("");
-        getSocket().send(response.toString());
+        getSocket().send(reply.toString());
+        if (needsUpdate) onUpdateClusterNodes();
+    }
+
+    private void onUpdateClusterNodes() {
+        System.out.printf("updating the cluster %s%n", clusterNodes);
+        clusterNodes.values().forEach(ip -> {
+            if (ip != getNode().getIp()) {
+                sendMsg((String) ip, CommandEnum.CLUSTER_UPDATE, new JSONObject(clusterNodes).toString());
+            }
+        });
     }
 }
