@@ -7,3 +7,4 @@ services:
       - "traefik.tcp.routers.cloud-node.tls=false"
       - "traefik.tcp.services.cloud-node.loadbalancer.server.port=7777"
       - "traefik.tcp.routers.cloud-node.entrypoints=tcpep"
+    env_file: .env

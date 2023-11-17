@@ -1,19 +1,19 @@
 package sdle.cloud.service;
 
 import sdle.cloud.cluster.Node;
-import sdle.cloud.message.MessageEnum;
-import sdle.cloud.message.MessageType;
+import sdle.cloud.message.CommandEnum;
+import sdle.cloud.message.CommandType;
 
 import java.util.List;
 
-public class ShoppListService extends ServiceBase {
+public class ShoppListService extends BaseService {
     public ShoppListService(Node node) {
         super(node);
     }
 
     @Override
-    protected String get0MQAddr() {
-        return String.format("tcp://*:%s", getNode().getPort());
+    protected String getServicePort() {
+        return getNode().getPort();
     }
 
     @Override
@@ -25,9 +25,9 @@ public class ShoppListService extends ServiceBase {
             throw new RuntimeException(e);
         }
 
-        MessageEnum messageEnum = MessageEnum.getMessage(msg.get(2));
+        CommandEnum messageEnum = CommandEnum.getMessage(msg.get(2));
         String response;
-        if (!MessageType.SHOPP_LIST.equals(messageEnum.msgType())) {
+        if (!CommandType.SHOPP_LIST.equals(messageEnum.cmdType())) {
             response = String.format("message [%s] not recongnized", msg.get(2));
         } else {
             switch (messageEnum) {

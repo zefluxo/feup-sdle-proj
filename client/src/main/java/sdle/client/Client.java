@@ -26,7 +26,7 @@ public class Client {
     }
 
     private static void sendRequest(ZContext context, int requestNbr) {
-        // neste exemplo fazendo a conexao dentro do loop apenas vez para verificar o funcionalmento do load balance
+        // neste exemplo fazendo a conexao dentro do loop apenas vez para verificar o funcionamento do load balance
         ZMQ.Socket socket = context.createSocket(SocketType.REQ);
         socket.setIdentity((Thread.currentThread().getName() + new Random().nextInt(1000)).getBytes(ZMQ.CHARSET));
         socket.connect("tcp://host.docker.internal:7777");

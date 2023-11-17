@@ -11,5 +11,5 @@ RUN --mount=type=cache,target=/root/.m2 mvn -f /usr/src/app/pom.xml clean packag
 #
 FROM eclipse-temurin:17-jre-ubi9-minimal
 COPY --from=build /usr/src/app/target/client-1.0-SNAPSHOT.one-jar.jar /usr/app/client.jar
-EXPOSE 5555
+EXPOSE 7777
 CMD ["java","-jar","/usr/app/client.jar"]
