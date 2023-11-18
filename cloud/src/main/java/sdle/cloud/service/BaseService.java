@@ -37,8 +37,8 @@ public abstract class BaseService {
         socket = context.createSocket(SocketType.ROUTER);
         String addr = get0MQAddr("*", getServicePort());
         socket.bind(addr);
+        System.out.printf("server up: %s%n", addr);
         while (!Thread.currentThread().isInterrupted()) {
-            System.out.printf("server up: %s%n", addr);
             List<String> msg = new ArrayList<>();
             do {
                 msg.add(socket.recvStr());

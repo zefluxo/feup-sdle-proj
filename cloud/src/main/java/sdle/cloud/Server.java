@@ -13,8 +13,8 @@ import java.util.concurrent.Executors;
 
 public class Server {
 
-    public static final String DEFAULT_SHOPP_LIST_PORT = "7777";
-    public static final String DEFAULT_CLUSTER_PORT = "7787";
+    public static final String DEFAULT_SHOPP_LIST_PORT = "7788";
+    public static final String DEFAULT_CLUSTER_PORT = "7799";
 
     public static final String DEFAULT_BOOTSTRAP = "localhost";
     //    public static final String DEFAULT_BOOTSTRAP = "10.5.0.11,10.5.0.12,10.5.0.13";

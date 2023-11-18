@@ -1,6 +1,7 @@
 package sdle.cloud.cluster;
 
 import lombok.Data;
+import sdle.cloud.utils.HashUtils;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -14,11 +15,11 @@ public class Cluster {
 
     private int nextBootstrapHost = 0;
 
-    private TreeMap<Integer, String> nodeHashes = new TreeMap<>();
+    private TreeMap<String, String> nodeHashes = new TreeMap<>();
 
     public void updateClusterHashNodes() {
         nodeHashes.clear();
-        nodes.forEach((k, v) -> nodeHashes.put(k.hashCode(), (String) v));
+        nodes.forEach((k, v) -> nodeHashes.put(HashUtils.getHash(k), (String) v));
         System.out.println(nodeHashes);
     }
 }

@@ -3,6 +3,7 @@ package sdle.cloud.cluster;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.Synchronized;
+import sdle.cloud.utils.HashUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -32,7 +33,7 @@ public class Node {
     @Synchronized
     public String getHashId() {
         if (hashId == null) {
-            hashId = String.valueOf(id.hashCode()); // TODO: avaliar necessidade de uma  funcao propria de hash
+            hashId = HashUtils.getHash(id);
         }
         return hashId;
     }

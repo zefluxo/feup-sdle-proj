@@ -4,12 +4,34 @@ public enum CommandEnum {
 
 
     // Messages of shopping list operation
-    GET_ITEM("getItem", CommandType.SHOPP_LIST),
-    PUT_ITEM("putItem", CommandType.SHOPP_LIST),
-    DELETE_ITEM("deleteItem", CommandType.SHOPP_LIST),
-    GET_LIST("getList", CommandType.SHOPP_LIST),
+
+    /**
+     * "putList" (no arqs) -> create a new list and return "listHashId"
+     */
     PUT_LIST("putList", CommandType.SHOPP_LIST),
+
+    /**
+     * "getList <listHashId>" -> return the list (json format)
+     */
+    GET_LIST("getList", CommandType.SHOPP_LIST),
+
+    /**
+     * "deleteList <listHashId>" -> delete the list and return "OK"
+     */
     DELETE_LIST("deleteList", CommandType.SHOPP_LIST),
+
+    /**
+     * "getItem <listHashId> <itemId>" -> return item of the list (json format)
+     */
+    GET_ITEM("getItem", CommandType.SHOPP_LIST),
+    /**
+     * "putItem <listHashId> <item> (json)" -> add a item on the list and return "OK"
+     */
+    PUT_ITEM("putItem", CommandType.SHOPP_LIST),
+    /**
+     * "deleteItem <listHashId> <itemId>" -> delete  item off the list
+     */
+    DELETE_ITEM("deleteItem", CommandType.SHOPP_LIST),
 
     // cluster internal messages
     // enviada para um bootstrap node na inicializacao de cada node
