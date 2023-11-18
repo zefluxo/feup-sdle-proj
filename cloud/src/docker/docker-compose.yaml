@@ -2,10 +2,10 @@ services:
 
   reverse-proxy:
     image: traefik:v2.10
-    command: --api.insecure=true --providers.docker --entryPoints.tcpep.address=:7777
+    command: --api.insecure=true --providers.docker --entryPoints.tcpep.address=:7788
     ports:
       - "80:80"
-      - "7777:7777"
+      - "7788:7788"
       - "18080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -22,6 +22,8 @@ services:
         ipv4_address: 10.5.0.11
 
   cloud-node-2:
+    depends_on:
+      - cloud-node-1
     extends:
       file: common.yaml
       service: cloud-node
@@ -30,6 +32,8 @@ services:
         ipv4_address: 10.5.0.12
 
   cloud-node-3:
+    depends_on:
+      - cloud-node-2
     extends:
       file: common.yaml
       service: cloud-node
@@ -38,6 +42,8 @@ services:
         ipv4_address: 10.5.0.13
 
   cloud-node-others:
+    depends_on:
+      - cloud-node-3
     extends:
       file: common.yaml
       service: cloud-node

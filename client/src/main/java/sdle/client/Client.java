@@ -15,7 +15,7 @@ public class Client {
         try (ZContext context = new ZContext()) {
             //  Socket to talk to server
             System.out.println("Connecting to cloud server");
-            for (int requestNbr = 0; requestNbr != 30; requestNbr++) {
+            for (int requestNbr = 1110; requestNbr != 1120; requestNbr++) {
                 int finalRequestNbr = requestNbr;
                 executor.submit(() -> sendRequest(context, finalRequestNbr));
             }
@@ -29,13 +29,13 @@ public class Client {
         // neste exemplo fazendo a conexao dentro do loop apenas vez para verificar o funcionamento do load balance
         ZMQ.Socket socket = context.createSocket(SocketType.REQ);
         socket.setIdentity((Thread.currentThread().getName() + new Random().nextInt(1000)).getBytes(ZMQ.CHARSET));
-        socket.connect("tcp://host.docker.internal:7777");
+        socket.connect("tcp://host.docker.internal:7788");
 
-        String request = String.format("Hello (client %s)", System.getenv("HOSTNAME"));
+        //String request = String.format("Hello (client %s)", System.getenv("HOSTNAME"));
         System.out.println("Sending Hello " + requestNbr);
 
         socket.sendMore("putList");
-        socket.send(request);
+        socket.send(requestNbr + "list_name");
 
         String reply = socket.recvStr();
         System.out.printf("Received %s (%s)%n", reply, requestNbr);

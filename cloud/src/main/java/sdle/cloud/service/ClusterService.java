@@ -2,7 +2,6 @@ package sdle.cloud.service;
 
 import org.json.JSONObject;
 import org.zeromq.SocketType;
-import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
@@ -19,9 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ClusterService extends BaseService {
     public static final String REPLY_OK = "OK";
-    private final ZContext context = new ZContext();
     private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
-
     private ZMQ.Socket clusterClientSocket;
 
     public ClusterService(Node node, Cluster cluster) {
@@ -44,7 +41,7 @@ public class ClusterService extends BaseService {
 
     private void printStatus() {
         System.out.println(getCluster().getNodes());
-        System.out.println(getCluster().getHashNodeIds());
+        System.out.println(getCluster().getNodeHashes());
     }
 
     private void joinCluster() {

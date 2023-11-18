@@ -11,7 +11,7 @@ RUN --mount=type=cache,target=/root/.m2 mvn -f /usr/src/app/pom.xml clean packag
 #
 FROM eclipse-temurin:17-jre-ubi9-minimal
 COPY --from=build /usr/src/app/target/cloud-node-1.0-SNAPSHOT.one-jar.jar /usr/app/cloud-node.jar
-EXPOSE 7777
-EXPOSE 7787
+EXPOSE 7788
+EXPOSE 7799
 
 CMD ["java","-jar","/usr/app/cloud-node.jar"]

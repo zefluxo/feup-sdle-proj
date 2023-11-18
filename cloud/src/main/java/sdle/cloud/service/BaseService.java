@@ -19,13 +19,12 @@ import java.util.concurrent.Executors;
 public abstract class BaseService {
 
     private static final ExecutorService executor = Executors.newCachedThreadPool();
+    protected final ZContext context = new ZContext();
 
     @Getter(AccessLevel.PROTECTED)
     private final Node node;
-
     @Getter(AccessLevel.PROTECTED)
     private final Cluster cluster;
-
     @Getter(AccessLevel.PROTECTED)
     private ZMQ.Socket socket;
 
@@ -35,19 +34,17 @@ public abstract class BaseService {
     }
 
     private void initServer() {
-        try (ZContext context = new ZContext()) {
-            socket = context.createSocket(SocketType.ROUTER);
-            String addr = get0MQAddr("*", getServicePort());
-            socket.bind(addr);
-            while (!Thread.currentThread().isInterrupted()) {
-                System.out.printf("server up: %s%n", addr);
-                List<String> msg = new ArrayList<>();
-                do {
-                    msg.add(socket.recvStr());
-                } while (socket.hasReceiveMore());
-                System.out.printf("[%s,%s] receive: %s%n", node.getIp(), getServicePort(), msg);
-                executor.execute(() -> processMsg(msg));
-            }
+        socket = context.createSocket(SocketType.ROUTER);
+        String addr = get0MQAddr("*", getServicePort());
+        socket.bind(addr);
+        while (!Thread.currentThread().isInterrupted()) {
+            System.out.printf("server up: %s%n", addr);
+            List<String> msg = new ArrayList<>();
+            do {
+                msg.add(socket.recvStr());
+            } while (socket.hasReceiveMore());
+            System.out.printf("[%s,%s] receive: %s%n", node.getIp(), getServicePort(), msg);
+            executor.execute(() -> processMsg(msg));
         }
     }
 
