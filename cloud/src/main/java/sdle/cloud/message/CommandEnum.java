@@ -1,5 +1,19 @@
 package sdle.cloud.message;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import sdle.cloud.processor.BaseProcessor;
+import sdle.cloud.processor.NotImplementedProcessor;
+import sdle.cloud.processor.NotRecognizedProcessor;
+import sdle.cloud.processor.cloud.ClusterJoinProcessor;
+import sdle.cloud.processor.cloud.ClusterLeaveProcessor;
+import sdle.cloud.processor.cloud.ClusterUpdateProcessor;
+import sdle.cloud.processor.shopplist.GetListProcessor;
+import sdle.cloud.processor.shopplist.PutItemProcessor;
+import sdle.cloud.processor.shopplist.PutListProcessor;
+
+@AllArgsConstructor
+@Getter
 public enum CommandEnum {
 
 
@@ -8,48 +22,45 @@ public enum CommandEnum {
     /**
      * "putList" (no arqs) -> create a new list and return "listHashId"
      */
-    PUT_LIST("putList", CommandType.SHOPP_LIST),
+    PUT_LIST("putList", CommandType.SHOPP_LIST, new PutListProcessor()),
 
     /**
      * "getList <listHashId>" -> return the list (json format)
      */
-    GET_LIST("getList", CommandType.SHOPP_LIST),
+    GET_LIST("getList", CommandType.SHOPP_LIST, new GetListProcessor()),
 
     /**
      * "deleteList <listHashId>" -> delete the list and return "OK"
      */
-    DELETE_LIST("deleteList", CommandType.SHOPP_LIST),
+    DELETE_LIST("deleteList", CommandType.SHOPP_LIST, new NotImplementedProcessor()),
 
     /**
      * "getItem <listHashId> <itemId>" -> return item of the list (json format)
      */
-    GET_ITEM("getItem", CommandType.SHOPP_LIST),
+    GET_ITEM("getItem", CommandType.SHOPP_LIST, new NotImplementedProcessor()),
     /**
      * "putItem <listHashId> <item> (json)" -> add a item on the list and return "OK"
      */
-    PUT_ITEM("putItem", CommandType.SHOPP_LIST),
+    PUT_ITEM("putItem", CommandType.SHOPP_LIST, new PutItemProcessor()),
     /**
      * "deleteItem <listHashId> <itemId>" -> delete  item off the list
      */
-    DELETE_ITEM("deleteItem", CommandType.SHOPP_LIST),
+    DELETE_ITEM("deleteItem", CommandType.SHOPP_LIST, new NotImplementedProcessor()),
 
     // cluster internal messages
     // enviada para um bootstrap node na inicializacao de cada node
-    CLUSTER_JOIN("cluster_join", CommandType.MEMBERSHIP),
+    CLUSTER_JOIN("cluster_join", CommandType.MEMBERSHIP, new ClusterJoinProcessor()),
     // enviada para um bootstrap node quando um node vai ser desligado (desligamento "normal")
-    CLUSTER_LEAVE("cluster_leave", CommandType.MEMBERSHIP),
+    CLUSTER_LEAVE("cluster_leave", CommandType.MEMBERSHIP, new ClusterLeaveProcessor()),
 
     // enviada pelo bootstrap para todos os nos do cluster, apos receber um join ou leave (ou quando um node for "expulso" do cluster por estar irresponsivo)
-    CLUSTER_UPDATE("cluster_update", CommandType.MEMBERSHIP),
+    CLUSTER_UPDATE("cluster_update", CommandType.MEMBERSHIP, new ClusterUpdateProcessor()),
 
-    CMD_NOT_RECOGNIZED("cmd not recognized", CommandType.OTHER);
+    CMD_NOT_RECOGNIZED("cmd not recognized", CommandType.OTHER, new NotRecognizedProcessor());
+
     private final String cmd;
     private final CommandType cmdType;
-
-    CommandEnum(String cmd, CommandType cmdType) {
-        this.cmd = cmd;
-        this.cmdType = cmdType;
-    }
+    private final BaseProcessor processor;
 
     public static CommandEnum getMessage(String cmd) {
         for (CommandEnum messageEnum : values()) {
@@ -60,11 +71,4 @@ public enum CommandEnum {
         return CMD_NOT_RECOGNIZED;
     }
 
-    public String cmd() {
-        return cmd;
-    }
-
-    public CommandType cmdType() {
-        return cmdType;
-    }
 }

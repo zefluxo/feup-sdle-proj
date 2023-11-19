@@ -24,7 +24,6 @@ public class Client {
 
                 List<String> msgArgs = new ArrayList<>(Arrays.asList(args).subList(2, args.length));
                 sendRequest(context, args[0], args[1], msgArgs, 0);
-                return;
             }
             executor.awaitTermination(10, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
@@ -37,18 +36,19 @@ public class Client {
         for (int requestNbr = 0; requestNbr != 10; requestNbr++) {
             int finalRequestNbr = requestNbr;
             executor.submit(() -> sendRequest(context, "host.docker.internal", "putList", Collections.emptyList(), finalRequestNbr));
-            Thread.sleep(new Random().nextInt(200));
         }
+        executor.shutdown();
     }
 
     @SneakyThrows
     private static void sendRequest(ZContext context, String dest, String cmd, List<String> msgArgs, int requestNbr) {
         // neste exemplo fazendo a conexao dentro do loop apenas vez para verificar o funcionamento do load balance
         ZMQ.Socket socket = context.createSocket(SocketType.REQ);
-        socket.setIdentity((Thread.currentThread().getName() + new Random().nextInt()).getBytes(ZMQ.CHARSET));
+        String identity = Thread.currentThread().getName() + new Random().nextInt();
+        socket.setIdentity(identity.getBytes(ZMQ.CHARSET));
         //socket.connect("tcp://host.docker.internal:7788");
         String url = String.format("tcp://%s:7788", dest);
-        System.out.println(url);
+        System.out.printf("identity: %s, url: %s%n", identity, url);
         socket.connect(url);
 
         //String request = String.format("Hello (client %s)", System.getenv("HOSTNAME"));
@@ -65,5 +65,7 @@ public class Client {
 
         String reply = socket.recvStr();
         System.out.printf("Received %s (%s)%n", reply, requestNbr);
+        socket.disconnect(url);
+        socket.close();
     }
 }

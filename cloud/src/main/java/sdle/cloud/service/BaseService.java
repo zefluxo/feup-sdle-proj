@@ -35,7 +35,7 @@ public abstract class BaseService {
 
     private void initServer() {
         socket = context.createSocket(SocketType.ROUTER);
-        String addr = get0MQAddr("*", getServicePort());
+        String addr = String.format("tcp://*:%s", getServicePort());
         socket.bind(addr);
         System.out.printf("server up: %s%n", addr);
         while (!Thread.currentThread().isInterrupted()) {
@@ -52,9 +52,6 @@ public abstract class BaseService {
 
     abstract protected String getServicePort();
 
-    protected String get0MQAddr(String hostname, String port) {
-        return String.format("tcp://%s:%s", hostname, port);
-    }
 
     protected abstract void processMsg(List<String> msg);
 
