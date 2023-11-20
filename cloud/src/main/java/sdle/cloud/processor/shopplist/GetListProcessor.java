@@ -12,7 +12,7 @@ public class GetListProcessor extends BaseShoppListProcessor {
     @Override
     public String process(ZMQ.Socket serverSocket, ZMQ.Socket clientSocket, List<String> msg, Cluster cluster, Node node) {
         //
-        String listHashId = msg.get(3);
+        String listHashId = msg.get(2);
         String dest = "";
         for (String nodeHash : cluster.getNodeHashes().keySet()) {
             if (listHashId.compareTo(nodeHash) > 0) {

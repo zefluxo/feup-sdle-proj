@@ -11,7 +11,7 @@ public class ClusterUpdateProcessor extends BaseCloudProcessor {
     @Override
     public String process(ZMQ.Socket serverSocket, ZMQ.Socket clientSocket, List<String> msg, Cluster cluster, Node node) {
         synchronized (this) {
-            cluster.setNodes(new JSONObject(msg.get(3)).toMap());
+            cluster.setNodes(new JSONObject(msg.get(2)).toMap());
             cluster.updateClusterHashNodes();
         }
         System.out.printf("Cluster updated : %s%n", cluster.getNodes());

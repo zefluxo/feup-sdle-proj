@@ -29,7 +29,7 @@ public class ClusterService extends BaseService {
     @Override
     public void init() {
         super.init();
-        clusterClientSocket = context.createSocket(SocketType.REQ);
+        clusterClientSocket = context.createSocket(SocketType.DEALER);
         clusterClientSocket.setIdentity((Thread.currentThread().getName() + new Random().nextInt(1000)).getBytes(ZMQ.CHARSET));
 
         getCluster().getNodes().put(getNode().getId(), getNode().getIp());
@@ -37,7 +37,7 @@ public class ClusterService extends BaseService {
         scheduledExecutor.schedule(this::joinCluster, 2, TimeUnit.SECONDS);
         scheduledExecutor.scheduleWithFixedDelay(this::printStatus, 10, 30, TimeUnit.SECONDS);
 
-        Signal.handle(new Signal("TERM"), signal -> onInterrupt());
+        //Signal.handle(new Signal("TERM"), signal -> onInterrupt());
         Signal.handle(new Signal("INT"), signal -> onInterrupt());
     }
 
@@ -49,12 +49,7 @@ public class ClusterService extends BaseService {
     private void joinCluster() {
         JSONObject nodeJson = new JSONObject();
         nodeJson.put(getNode().getId(), getNode().getIp());
-        CommandEnum.CLUSTER_JOIN.getProcessor().sendMsg(
-                clusterClientSocket,
-                getNextBootstrapHostAddr(),
-                getNode().getClusterPort(),
-                CommandEnum.CLUSTER_JOIN,
-                Collections.singletonList(nodeJson.toString()));
+        CommandEnum.CLUSTER_JOIN.getProcessor().sendMsg(clusterClientSocket, getNextBootstrapHostAddr(), getNode().getClusterPort(), CommandEnum.CLUSTER_JOIN, Collections.singletonList(nodeJson.toString()));
         System.out.println("Node added to cluster");
     }
 
@@ -69,12 +64,7 @@ public class ClusterService extends BaseService {
         getCluster().getNodes().values().forEach(ip -> {
             JSONObject nodeJson = new JSONObject();
             nodeJson.put(getNode().getId(), getNode().getIp());
-            CommandEnum.CLUSTER_LEAVE.getProcessor().sendMsg(
-                    clusterClientSocket,
-                    getNextBootstrapHostAddr(),
-                    getNode().getClusterPort(),
-                    CommandEnum.CLUSTER_LEAVE,
-                    Collections.singletonList(nodeJson.toString()));
+            CommandEnum.CLUSTER_LEAVE.getProcessor().sendMsg(clusterClientSocket, getNextBootstrapHostAddr(), getNode().getClusterPort(), CommandEnum.CLUSTER_LEAVE, Collections.singletonList(nodeJson.toString()));
         });
     }
 
@@ -90,7 +80,7 @@ public class ClusterService extends BaseService {
     @Override
     protected void processMsg(List<String> msg) {
         System.out.printf("processing cluster msg: %s%n", msg);
-        CommandEnum messageEnum = CommandEnum.getMessage(msg.get(2));
+        CommandEnum messageEnum = CommandEnum.getMessage(msg.get(1));
         messageEnum.getProcessor().process(getSocket(), clusterClientSocket, msg, getCluster(), getNode());
     }
 }

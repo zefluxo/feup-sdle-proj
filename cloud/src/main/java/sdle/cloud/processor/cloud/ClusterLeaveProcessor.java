@@ -11,7 +11,7 @@ public class ClusterLeaveProcessor extends BaseCloudProcessor {
     @Override
     public String process(ZMQ.Socket serverSocket, ZMQ.Socket clientSocket, List<String> msg, Cluster cluster, Node node) {
         synchronized (this) {
-            cluster.getNodes().remove(new JSONObject(msg.get(3)).keys().next());
+            cluster.getNodes().remove(new JSONObject(msg.get(2)).keys().next());
             cluster.updateClusterHashNodes();
         }
         String reply = REPLY_OK;

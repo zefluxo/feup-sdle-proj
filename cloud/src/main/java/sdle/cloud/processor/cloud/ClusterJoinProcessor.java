@@ -10,8 +10,9 @@ import java.util.List;
 public class ClusterJoinProcessor extends BaseCloudProcessor {
     @Override
     public String process(ZMQ.Socket serverSocket, ZMQ.Socket clientSocket, List<String> msg, Cluster cluster, Node node) {
+        System.out.printf("PROCESS %s%n", msg);
         synchronized (this) {
-            cluster.getNodes().putAll(new JSONObject(msg.get(3)).toMap());
+            cluster.getNodes().putAll(new JSONObject(msg.get(2)).toMap());
             cluster.updateClusterHashNodes();
         }
         String reply = REPLY_OK;

@@ -16,7 +16,7 @@ public class ShoppListService extends BaseService {
 
     public ShoppListService(Node node, Cluster cluster) {
         super(node, cluster);
-        shoppListClientSocket = context.createSocket(SocketType.REQ);
+        shoppListClientSocket = context.createSocket(SocketType.DEALER);
         shoppListClientSocket.setIdentity((Thread.currentThread().getName() + new Random().nextInt(1000)).getBytes(ZMQ.CHARSET));
 
     }
@@ -29,7 +29,7 @@ public class ShoppListService extends BaseService {
     @Override
     protected void processMsg(List<String> msg) {
         System.out.printf("processing client msg: %s%n", msg);
-        CommandEnum messageEnum = CommandEnum.getMessage(msg.get(2));
+        CommandEnum messageEnum = CommandEnum.getMessage(msg.get(1));
         messageEnum.getProcessor().process(getSocket(), shoppListClientSocket, msg, getCluster(), getNode());
     }
 }

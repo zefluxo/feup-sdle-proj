@@ -31,6 +31,8 @@ public abstract class BaseProcessor {
             socket.send(msg.get(msg.size() - 1));
         }
         System.out.printf("Command %s:%s sent to %s%n", commandEnum, msg, destAddr);
+        socket.recv(); // identity
+//        socket.recvStr(ZMQ.SNDMORE); // ""
         String reply = socket.recvStr();
         System.out.printf("Received %s%n", reply);
         socket.disconnect(destAddr);

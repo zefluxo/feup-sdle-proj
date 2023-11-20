@@ -11,7 +11,7 @@ import java.util.Map;
 public class PutItemProcessor extends BaseShoppListProcessor {
     @Override
     public String process(ZMQ.Socket serverSocket, ZMQ.Socket clientSocket, List<String> msg, Cluster cluster, Node node) {
-        String listHashId = msg.get(3);
+        String listHashId = msg.get(2);
         String dest = "";
         for (String nodeHash : cluster.getNodeHashes().keySet()) {
             if (listHashId.compareTo(nodeHash) > 0) {
@@ -28,7 +28,7 @@ public class PutItemProcessor extends BaseShoppListProcessor {
             if (shoppList == null) {
                 reply = REPLY_NOT_FOUND;
             } else {
-                shoppList.put(msg.get(4), Integer.valueOf(msg.get(5)));
+                shoppList.put(msg.get(3), Integer.valueOf(msg.get(4)));
                 System.out.println(cluster.getShoppLists());
                 reply = REPLY_OK;
             }

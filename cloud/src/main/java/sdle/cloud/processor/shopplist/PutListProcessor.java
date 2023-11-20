@@ -13,10 +13,10 @@ import java.util.List;
 public class PutListProcessor extends BaseShoppListProcessor {
     @Override
     public String process(ZMQ.Socket serverSocket, ZMQ.Socket clientSocket, List<String> msg, Cluster cluster, Node node) {
-        //
+        //System.out.printf("Put list process: %s%n", msg);
         String listHashId;
-        if (msg.size() > 3) {
-            listHashId = msg.get(3);
+        if (msg.size() > 2) {
+            listHashId = msg.get(2);
         } else {
             listHashId = HashUtils.getRandomHash();
         }
