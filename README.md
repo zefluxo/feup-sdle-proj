@@ -23,6 +23,14 @@ cd client
 ./run.sh
 ```
 
+### Client command line examples
+
+```
+java -jar target/client-1.0-SNAPSHOT.one-jar.jar 127.0.0.1 putList
+java -jar target/client-1.0-SNAPSHOT.one-jar.jar 127.0.0.1 getList
+java -jar target/client-1.0-SNAPSHOT.one-jar.jar 127.0.0.1 putItem <listHash> <itemName> <quantity>
+```
+
 ### KNOW ISSUES
 
 - concurrency problems (some will be resolved with CRDT implementation)
