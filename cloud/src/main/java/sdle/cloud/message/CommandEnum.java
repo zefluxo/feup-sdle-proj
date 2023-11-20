@@ -35,13 +35,15 @@ public enum CommandEnum {
     DELETE_LIST("deleteList", CommandType.SHOPP_LIST, new NotImplementedProcessor()),
 
     /**
-     * "getItem <listHashId> <itemId>" -> return item of the list (json format)
-     */
-    GET_ITEM("getItem", CommandType.SHOPP_LIST, new NotImplementedProcessor()),
-    /**
      * "putItem <listHashId> <item> (json)" -> add a item on the list and return "OK"
      */
     PUT_ITEM("putItem", CommandType.SHOPP_LIST, new PutItemProcessor()),
+
+    /**
+     * "getItem <listHashId> <itemId>" -> return item of the list (json format)
+     */
+    GET_ITEM("getItem", CommandType.SHOPP_LIST, new NotImplementedProcessor()),
+
     /**
      * "deleteItem <listHashId> <itemId>" -> delete  item off the list
      */

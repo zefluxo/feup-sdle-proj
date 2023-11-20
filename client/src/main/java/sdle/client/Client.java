@@ -53,7 +53,6 @@ public class Client {
 
         if (msgArgs.isEmpty()) {
             socket.send(cmd);
-
         } else {
             socket.sendMore(cmd);
             msgArgs.subList(0, msgArgs.size() - 1).forEach(socket::sendMore);

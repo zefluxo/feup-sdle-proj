@@ -35,6 +35,7 @@ public abstract class BaseService {
 
     private void initServer() {
         socket = context.createSocket(SocketType.ROUTER);
+        socket.setRouterMandatory(true);
         String addr = String.format("tcp://*:%s", getServicePort());
         socket.bind(addr);
         System.out.printf("server up: %s%n", addr);
