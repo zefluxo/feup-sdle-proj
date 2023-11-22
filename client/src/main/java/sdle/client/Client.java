@@ -34,6 +34,7 @@ public class Client {
         for (int requestNbr = 0; requestNbr != 10; requestNbr++) {
             int finalRequestNbr = requestNbr;
             executor.submit(() -> sendRequest(context, "host.docker.internal", "putList", Collections.emptyList(), finalRequestNbr));
+            Thread.sleep(10);
         }
         // executor.shutdown();
     }

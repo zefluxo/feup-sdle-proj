@@ -5,6 +5,7 @@ import lombok.Getter;
 import sdle.cloud.processor.BaseProcessor;
 import sdle.cloud.processor.NotImplementedProcessor;
 import sdle.cloud.processor.NotRecognizedProcessor;
+import sdle.cloud.processor.cloud.ClusterHeartBeatProcessor;
 import sdle.cloud.processor.cloud.ClusterJoinProcessor;
 import sdle.cloud.processor.cloud.ClusterLeaveProcessor;
 import sdle.cloud.processor.cloud.ClusterUpdateProcessor;
@@ -57,6 +58,8 @@ public enum CommandEnum {
 
     // enviada pelo bootstrap para todos os nos do cluster, apos receber um join ou leave (ou quando um node for "expulso" do cluster por estar irresponsivo)
     CLUSTER_UPDATE("cluster_update", CommandType.MEMBERSHIP, new ClusterUpdateProcessor()),
+
+    CLUSTER_HEARTBEAT("cluster_heartbeat", CommandType.MEMBERSHIP, new ClusterHeartBeatProcessor()),
 
     CMD_NOT_RECOGNIZED("cmd not recognized", CommandType.OTHER, new NotRecognizedProcessor());
 

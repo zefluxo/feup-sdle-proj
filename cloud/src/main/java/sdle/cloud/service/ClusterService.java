@@ -11,14 +11,18 @@ import sun.misc.Signal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class ClusterService extends BaseService {
     public static final String REPLY_OK = "OK";
-    private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(1);
+    private static final Integer MAX_HEARTBEAT_FAILURES = 2;
+    private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(10);
+    private final Map<String, Integer> heartbeatFailures = new ConcurrentHashMap<>();
     private ZMQ.Socket clusterClientSocket;
 
     public ClusterService(Node node, Cluster cluster) {
@@ -33,7 +37,7 @@ public class ClusterService extends BaseService {
         getCluster().getNodes().put(getNode().getId(), getNode().getIp());
         getCluster().updateClusterHashNodes();
         scheduledExecutor.schedule(this::joinCluster, 2, TimeUnit.SECONDS);
-        scheduledExecutor.scheduleWithFixedDelay(this::heartBeat, 10, 30, TimeUnit.SECONDS);
+        scheduledExecutor.scheduleWithFixedDelay(this::heartBeat, 5, 5, TimeUnit.SECONDS);
 
         //Signal.handle(new Signal("TERM"), signal -> onInterrupt());
         Signal.handle(new Signal("INT"), signal -> onInterrupt());
@@ -41,7 +45,25 @@ public class ClusterService extends BaseService {
 
     private void heartBeat() {
         System.out.println(getCluster().getNodes());
-        //System.out.println(getCluster().getNodeHashes());
+        getCluster().getNodes().forEach((id, ip) -> {
+            if (!getNode().getId().equals(id)) {
+                String reply = ZMQUtils.sendMsg(clusterClientSocket, (String) ip, getNode().getClusterPort(), CommandEnum.CLUSTER_HEARTBEAT, Collections.emptyList());
+                if (REPLY_OK.equals(reply)) {
+                    heartbeatFailures.remove(id);
+                } else {
+                    heartbeatFailures.merge(id, 1, Integer::sum);
+//                    heartbeatFailures.putIfAbsent(id, 0);
+//                    heartbeatFailures.put(id, heartbeatFailures.get(getNode().getId()) + 1);
+                    if (heartbeatFailures.get(id) > MAX_HEARTBEAT_FAILURES) {
+                        getCluster().getNodes().remove(id);
+                        getCluster().updateClusterHashNodes();
+                        heartbeatFailures.remove(id);
+                        ZMQUtils.notifyClusterNodesUpdate(clusterClientSocket, getCluster(), getNode());
+                    }
+                }
+            }
+        });
+        System.out.printf(" heartbeat failures: %s%n", heartbeatFailures);
     }
 
     private void joinCluster() {

@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 public abstract class BaseService {
 
-    private static final ExecutorService executor = Executors.newCachedThreadPool();
+    private static final ExecutorService executor = Executors.newFixedThreadPool(50);
     protected final ZContext context = new ZContext();
 
     @Getter(AccessLevel.PROTECTED)

@@ -1,21 +1,36 @@
 package sdle.cloud.utils;
 
+import org.json.JSONObject;
 import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
+import sdle.cloud.cluster.Cluster;
+import sdle.cloud.cluster.Node;
 import sdle.cloud.message.CommandEnum;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
 public class ZMQUtils {
 
+
+    public static void notifyClusterNodesUpdate(ZMQ.Socket clientSocket, Cluster cluster, Node node) {
+        System.out.printf("updating the cluster %s%n", cluster.getNodes());
+        cluster.getNodes().values().forEach(ip -> {
+            if (ip != node.getIp()) {
+                ZMQUtils.sendMsg(clientSocket, (String) ip, node.getClusterPort(), CommandEnum.CLUSTER_UPDATE,
+                        Collections.singletonList(new JSONObject(cluster.getNodes()).toString()));
+            }
+        });
+    }
+
     public static ZMQ.Socket newClientSocket(ZContext context) {
-        final ZMQ.Socket shoppListClientSocket;
-        shoppListClientSocket = context.createSocket(SocketType.DEALER);
-        shoppListClientSocket.setIdentity((Thread.currentThread().getName() + new Random().nextInt(1000)).getBytes(ZMQ.CHARSET));
-        shoppListClientSocket.setReceiveTimeOut(5000);
-        return shoppListClientSocket;
+        final ZMQ.Socket clientSocket;
+        clientSocket = context.createSocket(SocketType.DEALER);
+        clientSocket.setIdentity((Thread.currentThread().getName() + new Random().nextInt(1000)).getBytes(ZMQ.CHARSET));
+        clientSocket.setReceiveTimeOut(5000);
+        return clientSocket;
     }
 
     public static String sendMsg(ZMQ.Socket socket, String destHost, String destPort, CommandEnum commandEnum, List<String> msg) {
