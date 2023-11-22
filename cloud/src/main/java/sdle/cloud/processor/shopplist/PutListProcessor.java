@@ -5,6 +5,7 @@ import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
 import sdle.cloud.message.CommandEnum;
 import sdle.cloud.utils.HashUtils;
+import sdle.cloud.utils.ZMQUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -13,7 +14,7 @@ import java.util.List;
 public class PutListProcessor extends BaseShoppListProcessor {
     @Override
     public String process(ZMQ.Socket serverSocket, ZMQ.Socket clientSocket, List<String> msg, Cluster cluster, Node node) {
-        //System.out.printf("Put list process: %s%n", msg);
+        System.out.printf("PUT LIST process %s%n", msg);
         String listHashId;
         if (msg.size() > 2) {
             listHashId = msg.get(2);
@@ -26,9 +27,9 @@ public class PutListProcessor extends BaseShoppListProcessor {
             cluster.getShoppLists().put(listHashId, new HashMap<>());
             System.out.println(cluster.getShoppLists());
         } else {
-            sendMsg(clientSocket, dest, node.getClusterPort(), CommandEnum.PUT_LIST, Collections.singletonList(listHashId));
+            ZMQUtils.sendMsg(clientSocket, dest, node.getClusterPort(), CommandEnum.PUT_LIST, Collections.singletonList(listHashId));
         }
-        sendReply(serverSocket, msg, cluster, node, listHashId);
+        ZMQUtils.sendReply(serverSocket, msg, listHashId);
         return listHashId;
     }
 

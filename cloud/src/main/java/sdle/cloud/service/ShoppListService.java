@@ -1,13 +1,12 @@
 package sdle.cloud.service;
 
-import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
 import sdle.cloud.message.CommandEnum;
+import sdle.cloud.utils.ZMQUtils;
 
 import java.util.List;
-import java.util.Random;
 
 public class ShoppListService extends BaseService {
 
@@ -16,10 +15,9 @@ public class ShoppListService extends BaseService {
 
     public ShoppListService(Node node, Cluster cluster) {
         super(node, cluster);
-        shoppListClientSocket = context.createSocket(SocketType.DEALER);
-        shoppListClientSocket.setIdentity((Thread.currentThread().getName() + new Random().nextInt(1000)).getBytes(ZMQ.CHARSET));
-
+        shoppListClientSocket = ZMQUtils.newClientSocket(context);
     }
+
 
     @Override
     protected String getServicePort() {
@@ -29,7 +27,7 @@ public class ShoppListService extends BaseService {
     @Override
     protected void processMsg(List<String> msg) {
         System.out.printf("processing client msg: %s%n", msg);
-        CommandEnum messageEnum = CommandEnum.getMessage(msg.get(1));
+        CommandEnum messageEnum = CommandEnum.getCommand(msg.get(1));
         messageEnum.getProcessor().process(getSocket(), shoppListClientSocket, msg, getCluster(), getNode());
     }
 }

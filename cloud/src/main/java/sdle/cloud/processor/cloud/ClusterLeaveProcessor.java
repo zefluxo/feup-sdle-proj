@@ -10,6 +10,7 @@ import java.util.List;
 public class ClusterLeaveProcessor extends BaseCloudProcessor {
     @Override
     public String process(ZMQ.Socket serverSocket, ZMQ.Socket clientSocket, List<String> msg, Cluster cluster, Node node) {
+        System.out.printf("LEAVE process %s%n", msg);
         synchronized (this) {
             cluster.getNodes().remove(new JSONObject(msg.get(2)).keys().next());
             cluster.updateClusterHashNodes();

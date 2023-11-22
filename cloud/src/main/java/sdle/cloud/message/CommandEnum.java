@@ -64,7 +64,7 @@ public enum CommandEnum {
     private final CommandType cmdType;
     private final BaseProcessor processor;
 
-    public static CommandEnum getMessage(String cmd) {
+    public static CommandEnum getCommand(String cmd) {
         for (CommandEnum messageEnum : values()) {
             if (messageEnum.cmd.equals(cmd)) {
                 return messageEnum;

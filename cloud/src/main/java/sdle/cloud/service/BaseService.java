@@ -35,7 +35,7 @@ public abstract class BaseService {
 
     private void initServer() {
         socket = context.createSocket(SocketType.ROUTER);
-        socket.setRouterMandatory(true);
+        //socket.setRouterMandatory(true);
         String addr = String.format("tcp://*:%s", getServicePort());
         socket.bind(addr);
         System.out.printf("server up: %s%n", addr);
@@ -53,7 +53,5 @@ public abstract class BaseService {
 
     abstract protected String getServicePort();
 
-
     protected abstract void processMsg(List<String> msg);
-
 }

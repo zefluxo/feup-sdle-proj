@@ -37,6 +37,32 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>maven</executable>
+                    <mainClass>sdle.client.Client</mainClass>
+                    <!-- optional -->
+                    <!--                    <workingDirectory>target/tmp</workingDirectory>-->
+                    <!--                    <arguments>-->
+                    <!--                        <argument>-X</argument>-->
+                    <!--                        <argument>project:dist</argument>-->
+                    <!--                    </arguments>-->
+                    <!--                    <environmentVariables>-->
+                    <!--                        <LANG>en_US</LANG>-->
+                    <!--                    </environmentVariables>-->
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <groupId>com.jolira</groupId>
                 <artifactId>onejar-maven-plugin</artifactId>
                 <version>1.4.4</version>

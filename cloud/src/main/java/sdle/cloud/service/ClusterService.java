@@ -2,17 +2,16 @@ package sdle.cloud.service;
 
 import lombok.SneakyThrows;
 import org.json.JSONObject;
-import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
 import sdle.cloud.message.CommandEnum;
+import sdle.cloud.utils.ZMQUtils;
 import sun.misc.Signal;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -29,27 +28,27 @@ public class ClusterService extends BaseService {
     @Override
     public void init() {
         super.init();
-        clusterClientSocket = context.createSocket(SocketType.DEALER);
-        clusterClientSocket.setIdentity((Thread.currentThread().getName() + new Random().nextInt(1000)).getBytes(ZMQ.CHARSET));
+        clusterClientSocket = ZMQUtils.newClientSocket(context);
 
         getCluster().getNodes().put(getNode().getId(), getNode().getIp());
         getCluster().updateClusterHashNodes();
         scheduledExecutor.schedule(this::joinCluster, 2, TimeUnit.SECONDS);
-        scheduledExecutor.scheduleWithFixedDelay(this::printStatus, 10, 30, TimeUnit.SECONDS);
+        scheduledExecutor.scheduleWithFixedDelay(this::heartBeat, 10, 30, TimeUnit.SECONDS);
 
         //Signal.handle(new Signal("TERM"), signal -> onInterrupt());
         Signal.handle(new Signal("INT"), signal -> onInterrupt());
     }
 
-    private void printStatus() {
+    private void heartBeat() {
         System.out.println(getCluster().getNodes());
-        System.out.println(getCluster().getNodeHashes());
+        //System.out.println(getCluster().getNodeHashes());
     }
 
     private void joinCluster() {
         JSONObject nodeJson = new JSONObject();
         nodeJson.put(getNode().getId(), getNode().getIp());
-        CommandEnum.CLUSTER_JOIN.getProcessor().sendMsg(clusterClientSocket, getNextBootstrapHostAddr(), getNode().getClusterPort(), CommandEnum.CLUSTER_JOIN, Collections.singletonList(nodeJson.toString()));
+        String nextBootstrapHostAddr = getNextBootstrapHostAddr();
+        ZMQUtils.sendMsg(clusterClientSocket, nextBootstrapHostAddr, getNode().getClusterPort(), CommandEnum.CLUSTER_JOIN, Collections.singletonList(nodeJson.toString()));
         System.out.println("Node added to cluster");
     }
 
@@ -65,7 +64,7 @@ public class ClusterService extends BaseService {
             if (!ip.equals(getNode().getIp())) {
                 JSONObject nodeJson = new JSONObject();
                 nodeJson.put(getNode().getId(), getNode().getIp());
-                CommandEnum.CLUSTER_LEAVE.getProcessor().sendMsg(clusterClientSocket, getNextBootstrapHostAddr(), getNode().getClusterPort(), CommandEnum.CLUSTER_LEAVE, Collections.singletonList(nodeJson.toString()));
+                ZMQUtils.sendMsg(clusterClientSocket, getNextBootstrapHostAddr(), getNode().getClusterPort(), CommandEnum.CLUSTER_LEAVE, Collections.singletonList(nodeJson.toString()));
             }
         });
         System.exit(0);
@@ -83,7 +82,7 @@ public class ClusterService extends BaseService {
     @Override
     protected void processMsg(List<String> msg) {
         System.out.printf("processing cluster msg: %s%n", msg);
-        CommandEnum messageEnum = CommandEnum.getMessage(msg.get(1));
+        CommandEnum messageEnum = CommandEnum.getCommand(msg.get(1));
         messageEnum.getProcessor().process(getSocket(), clusterClientSocket, msg, getCluster(), getNode());
     }
 }
