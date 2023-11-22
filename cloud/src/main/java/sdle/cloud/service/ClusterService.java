@@ -62,10 +62,13 @@ public class ClusterService extends BaseService {
     protected void onInterrupt() {
         System.out.println("terminating and leaving cluster");
         getCluster().getNodes().values().forEach(ip -> {
-            JSONObject nodeJson = new JSONObject();
-            nodeJson.put(getNode().getId(), getNode().getIp());
-            CommandEnum.CLUSTER_LEAVE.getProcessor().sendMsg(clusterClientSocket, getNextBootstrapHostAddr(), getNode().getClusterPort(), CommandEnum.CLUSTER_LEAVE, Collections.singletonList(nodeJson.toString()));
+            if (!ip.equals(getNode().getIp())) {
+                JSONObject nodeJson = new JSONObject();
+                nodeJson.put(getNode().getId(), getNode().getIp());
+                CommandEnum.CLUSTER_LEAVE.getProcessor().sendMsg(clusterClientSocket, getNextBootstrapHostAddr(), getNode().getClusterPort(), CommandEnum.CLUSTER_LEAVE, Collections.singletonList(nodeJson.toString()));
+            }
         });
+        System.exit(0);
     }
 
     private String getNextBootstrapHostAddr() {
