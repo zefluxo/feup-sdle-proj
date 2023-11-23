@@ -4,14 +4,14 @@ import org.zeromq.ZMQ;
 import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
 import sdle.cloud.message.CommandEnum;
-import sdle.cloud.utils.ZMQUtils;
+import sdle.cloud.utils.ZMQAdapter;
 
 import java.util.Collections;
 import java.util.List;
 
 public class GetListProcessor extends BaseShoppListProcessor {
     @Override
-    public String process(ZMQ.Socket serverSocket, ZMQ.Socket clientSocket, List<String> msg, Cluster cluster, Node node) {
+    public String process(ZMQ.Socket serverSocket, ZMQAdapter zmqAdapter, List<String> msg, Cluster cluster, Node node) {
         System.out.printf("GET LIST process %s%n", msg);
         String listHashId = msg.get(2);
         String dest = getListDestination(cluster, listHashId);
@@ -23,9 +23,9 @@ public class GetListProcessor extends BaseShoppListProcessor {
                 reply = REPLY_NOT_FOUND;
             }
         } else {
-            reply = ZMQUtils.sendMsg(clientSocket, dest, node.getClusterPort(), CommandEnum.GET_LIST, Collections.singletonList(listHashId));
+            reply = zmqAdapter.sendMsg(dest, node.getClusterPort(), CommandEnum.GET_LIST, Collections.singletonList(listHashId));
         }
-        ZMQUtils.sendReply(serverSocket, msg, reply);
+        zmqAdapter.sendReply(serverSocket, msg, reply);
         return reply;
     }
 

@@ -4,14 +4,14 @@ import org.zeromq.ZMQ;
 import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
 import sdle.cloud.message.CommandEnum;
-import sdle.cloud.utils.ZMQUtils;
+import sdle.cloud.utils.ZMQAdapter;
 
 import java.util.List;
 import java.util.Map;
 
 public class PutItemProcessor extends BaseShoppListProcessor {
     @Override
-    public String process(ZMQ.Socket serverSocket, ZMQ.Socket clientSocket, List<String> msg, Cluster cluster, Node node) {
+    public String process(ZMQ.Socket serverSocket, ZMQAdapter zmqAdapter, List<String> msg, Cluster cluster, Node node) {
         System.out.printf("PUT ITEM process %s%n", msg);
         String listHashId = msg.get(2);
         String dest = getListDestination(cluster, listHashId);
@@ -27,9 +27,9 @@ public class PutItemProcessor extends BaseShoppListProcessor {
                 reply = REPLY_OK;
             }
         } else {
-            reply = ZMQUtils.sendMsg(clientSocket, dest, node.getClusterPort(), CommandEnum.PUT_ITEM, msg.subList(2, msg.size()));
+            reply = zmqAdapter.sendMsg(dest, node.getClusterPort(), CommandEnum.PUT_ITEM, msg.subList(2, msg.size()));
         }
-        ZMQUtils.sendReply(serverSocket, msg, reply);
+        zmqAdapter.sendReply(serverSocket, msg, reply);
         return reply;
     }
 }

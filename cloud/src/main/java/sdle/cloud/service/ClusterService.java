@@ -6,7 +6,6 @@ import org.zeromq.ZMQ;
 import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
 import sdle.cloud.message.CommandEnum;
-import sdle.cloud.utils.ZMQUtils;
 import sun.misc.Signal;
 
 import java.util.Collections;
@@ -23,7 +22,6 @@ public class ClusterService extends BaseService {
     private static final Integer MAX_HEARTBEAT_FAILURES = 2;
     private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(10);
     private final Map<String, Integer> heartbeatFailures = new ConcurrentHashMap<>();
-    private ZMQ.Socket clusterClientSocket;
 
     public ClusterService(Node node, Cluster cluster) {
         super(node, cluster);
@@ -32,7 +30,6 @@ public class ClusterService extends BaseService {
     @Override
     public void init() {
         super.init();
-        clusterClientSocket = ZMQUtils.newClientSocket(context);
 
         getCluster().getNodes().put(getNode().getId(), getNode().getIp());
         getCluster().updateClusterHashNodes();
@@ -45,9 +42,10 @@ public class ClusterService extends BaseService {
 
     private void heartBeat() {
         System.out.println(getCluster().getNodes());
+        ZMQ.Socket heartbeatClientSocket = zmqAdapter.newClientSocket();
         getCluster().getNodes().forEach((id, ip) -> {
             if (!getNode().getId().equals(id)) {
-                String reply = ZMQUtils.sendMsg(clusterClientSocket, (String) ip, getNode().getClusterPort(), CommandEnum.CLUSTER_HEARTBEAT, Collections.emptyList());
+                String reply = zmqAdapter.sendMsg(heartbeatClientSocket, (String) ip, getNode().getClusterPort(), CommandEnum.CLUSTER_HEARTBEAT, Collections.emptyList());
                 if (REPLY_OK.equals(reply)) {
                     heartbeatFailures.remove(id);
                 } else {
@@ -58,11 +56,12 @@ public class ClusterService extends BaseService {
                         getCluster().getNodes().remove(id);
                         getCluster().updateClusterHashNodes();
                         heartbeatFailures.remove(id);
-                        ZMQUtils.notifyClusterNodesUpdate(clusterClientSocket, getCluster(), getNode());
+                        zmqAdapter.notifyClusterNodesUpdate(getCluster(), getNode());
                     }
                 }
             }
         });
+        heartbeatClientSocket.close();
         System.out.printf(" heartbeat failures: %s%n", heartbeatFailures);
     }
 
@@ -70,7 +69,7 @@ public class ClusterService extends BaseService {
         JSONObject nodeJson = new JSONObject();
         nodeJson.put(getNode().getId(), getNode().getIp());
         String nextBootstrapHostAddr = getNextBootstrapHostAddr();
-        ZMQUtils.sendMsg(clusterClientSocket, nextBootstrapHostAddr, getNode().getClusterPort(), CommandEnum.CLUSTER_JOIN, Collections.singletonList(nodeJson.toString()));
+        zmqAdapter.sendMsg(nextBootstrapHostAddr, getNode().getClusterPort(), CommandEnum.CLUSTER_JOIN, Collections.singletonList(nodeJson.toString()));
         System.out.println("Node added to cluster");
     }
 
@@ -86,7 +85,7 @@ public class ClusterService extends BaseService {
             if (!ip.equals(getNode().getIp())) {
                 JSONObject nodeJson = new JSONObject();
                 nodeJson.put(getNode().getId(), getNode().getIp());
-                ZMQUtils.sendMsg(clusterClientSocket, getNextBootstrapHostAddr(), getNode().getClusterPort(), CommandEnum.CLUSTER_LEAVE, Collections.singletonList(nodeJson.toString()));
+                zmqAdapter.sendMsg(getNextBootstrapHostAddr(), getNode().getClusterPort(), CommandEnum.CLUSTER_LEAVE, Collections.singletonList(nodeJson.toString()));
             }
         });
         System.exit(0);
@@ -105,6 +104,6 @@ public class ClusterService extends BaseService {
     protected void processMsg(List<String> msg) {
         System.out.printf("processing cluster msg: %s%n", msg);
         CommandEnum messageEnum = CommandEnum.getCommand(msg.get(1));
-        messageEnum.getProcessor().process(getSocket(), clusterClientSocket, msg, getCluster(), getNode());
+        messageEnum.getProcessor().process(getSocket(), zmqAdapter, msg, getCluster(), getNode());
     }
 }

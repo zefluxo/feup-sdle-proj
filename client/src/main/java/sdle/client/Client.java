@@ -22,8 +22,6 @@ public class Client {
                 List<String> msgArgs = new ArrayList<>(Arrays.asList(args).subList(2, args.length));
                 sendRequest(context, args[0], args[1], msgArgs, 0);
             }
-            executor.awaitTermination(10, TimeUnit.SECONDS);
-            executor.shutdown();
         } catch (InterruptedException e) {
             // throw new RuntimeException(e);
         }
@@ -34,9 +32,8 @@ public class Client {
         for (int requestNbr = 0; requestNbr != 10; requestNbr++) {
             int finalRequestNbr = requestNbr;
             executor.submit(() -> sendRequest(context, "host.docker.internal", "putList", Collections.emptyList(), finalRequestNbr));
-            Thread.sleep(10);
         }
-        // executor.shutdown();
+        executor.awaitTermination(5, TimeUnit.SECONDS);
     }
 
     @SneakyThrows
@@ -63,10 +60,10 @@ public class Client {
             socket.send(msgArgs.get(msgArgs.size() - 1));
         }
 
-        String serverIdentity = socket.recvStr(); // server identity
-        //socket.recvStr(ZMQ.SNDMORE); // ""
+        socket.recvStr(); //""
+//        socket.recvStr(ZMQ.SNDMORE); // ""
         String reply = socket.recvStr();
-        System.out.printf("Received %s from %s (%s)%n", reply, serverIdentity, requestNbr);
+        System.out.printf("Received %s (%s)%n", reply, requestNbr);
         socket.disconnect(url);
         socket.close();
     }

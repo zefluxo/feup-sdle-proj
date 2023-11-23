@@ -8,6 +8,7 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
+import sdle.cloud.utils.ZMQAdapter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +21,7 @@ public abstract class BaseService {
 
     private static final ExecutorService executor = Executors.newFixedThreadPool(50);
     protected final ZContext context = new ZContext();
+    protected final ZMQAdapter zmqAdapter = new ZMQAdapter();
 
     @Getter(AccessLevel.PROTECTED)
     private final Node node;

@@ -1,6 +1,6 @@
 services:
   client:
     image: client
-    scale: 2
+    scale: 5
     extra_hosts:
       - "host.docker.internal:host-gateway"
