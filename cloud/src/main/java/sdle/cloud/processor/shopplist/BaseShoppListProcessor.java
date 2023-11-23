@@ -4,17 +4,16 @@ import sdle.cloud.cluster.Cluster;
 import sdle.cloud.processor.BaseProcessor;
 
 public abstract class BaseShoppListProcessor extends BaseProcessor {
-    protected String getListDestination(Cluster cluster, String listHashId) {
-        String dest = "";
+    protected String getListOwner(Cluster cluster, String listHashId) {
         for (String nodeHash : cluster.getNodeHashes().keySet()) {
+            System.out.printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> : %s, %s, %s%n", listHashId, nodeHash, listHashId.compareTo(nodeHash) < 0);
             if (listHashId.compareTo(nodeHash) < 0) {
-                dest = cluster.getNodeHashes().get(nodeHash);
+                return cluster.getNodeHashes().get(nodeHash);
             }
         }
-        // se nao estiver setado deve se usar o ultimo node
+        // se nao estiver setado deve se usar o primeiro node
         // (o listHashId da lista eh menor que todos os hashs dos nodes)
-        if (dest.isEmpty()) dest = cluster.getNodeHashes().firstEntry().getValue();
-        return dest;
+        return cluster.getNodeHashes().firstEntry().getValue();
     }
 
 }

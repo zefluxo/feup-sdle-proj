@@ -14,10 +14,10 @@ public class PutItemProcessor extends BaseShoppListProcessor {
     public String process(ZMQ.Socket serverSocket, ZMQAdapter zmqAdapter, List<String> msg, Cluster cluster, Node node) {
         System.out.printf("PUT ITEM process %s%n", msg);
         String listHashId = msg.get(2);
-        String dest = getListDestination(cluster, listHashId);
-        System.out.printf("%s, %s, %s%n", dest, node.getIp(), dest.equals(node.getIp()));
+        String owner = getListOwner(cluster, listHashId);
+        System.out.printf("%s, %s, %s%n", owner, node.getIp(), owner.equals(node.getIp()));
         String reply;
-        if (dest.equals(node.getIp())) {
+        if (owner.equals(node.getIp())) {
             Map<String, Integer> shoppList = cluster.getShoppLists().get(listHashId);
             if (shoppList == null) {
                 reply = REPLY_NOT_FOUND;
@@ -27,7 +27,7 @@ public class PutItemProcessor extends BaseShoppListProcessor {
                 reply = REPLY_OK;
             }
         } else {
-            reply = zmqAdapter.sendMsg(dest, node.getClusterPort(), CommandEnum.PUT_ITEM, msg.subList(2, msg.size()));
+            reply = zmqAdapter.sendMsg(owner, node.getClusterPort(), CommandEnum.PUT_ITEM, msg.subList(2, msg.size()));
         }
         zmqAdapter.sendReply(serverSocket, msg, reply);
         return reply;

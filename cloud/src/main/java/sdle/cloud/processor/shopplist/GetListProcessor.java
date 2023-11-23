@@ -14,16 +14,16 @@ public class GetListProcessor extends BaseShoppListProcessor {
     public String process(ZMQ.Socket serverSocket, ZMQAdapter zmqAdapter, List<String> msg, Cluster cluster, Node node) {
         System.out.printf("GET LIST process %s%n", msg);
         String listHashId = msg.get(2);
-        String dest = getListDestination(cluster, listHashId);
-        System.out.printf("%s, %s, %s%n", dest, node.getIp(), dest.equals(node.getIp()));
+        String owner = getListOwner(cluster, listHashId);
+        System.out.printf("%s, %s, %s%n", owner, node.getIp(), owner.equals(node.getIp()));
         String reply;
-        if (dest.equals(node.getIp())) {
+        if (owner.equals(node.getIp())) {
             reply = String.valueOf(cluster.getShoppLists().get(listHashId));
             if ("null".equals(reply)) {
                 reply = REPLY_NOT_FOUND;
             }
         } else {
-            reply = zmqAdapter.sendMsg(dest, node.getClusterPort(), CommandEnum.GET_LIST, Collections.singletonList(listHashId));
+            reply = zmqAdapter.sendMsg(owner, node.getClusterPort(), CommandEnum.GET_LIST, Collections.singletonList(listHashId));
         }
         zmqAdapter.sendReply(serverSocket, msg, reply);
         return reply;

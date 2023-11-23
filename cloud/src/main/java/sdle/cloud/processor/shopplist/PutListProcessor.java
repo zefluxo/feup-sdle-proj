@@ -19,15 +19,15 @@ public class PutListProcessor extends BaseShoppListProcessor {
         if (msg.size() > 2) {
             listHashId = msg.get(2);
         } else {
-            listHashId = HashUtils.getRandomHash();
+            listHashId = String.valueOf(HashUtils.getRandomHash());
         }
-        String dest = getListDestination(cluster, listHashId);
-        System.out.printf("%s, %s, %s%n", dest, node.getIp(), dest.equals(node.getIp()));
-        if (dest.equals(node.getIp())) {
+        String ownerIp = getListOwner(cluster, listHashId);
+        System.out.printf("%s, %s, %s%n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()));
+        if (ownerIp.equals(node.getIp())) {
             cluster.getShoppLists().put(listHashId, new HashMap<>());
             System.out.println(cluster.getShoppLists());
         } else {
-            zmqAdapter.sendMsg(dest, node.getClusterPort(), CommandEnum.PUT_LIST, Collections.singletonList(listHashId));
+            zmqAdapter.sendMsg(ownerIp, node.getClusterPort(), CommandEnum.PUT_LIST, Collections.singletonList(listHashId));
         }
         zmqAdapter.sendReply(serverSocket, msg, listHashId);
         return listHashId;

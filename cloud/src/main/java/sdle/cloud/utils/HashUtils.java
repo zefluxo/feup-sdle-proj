@@ -1,15 +1,41 @@
 package sdle.cloud.utils;
 
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 public class HashUtils {
 
     private static final Random RANDOM = new Random();
 
-    public static String getHash(String src) {
-        // TODO: avaliar necessaidade de outro algoritmos (MD5, SHA-1, SHA-256, etc)
-        return String.valueOf(src.hashCode());
+    public static String getHash(String input) {
+
+        String hashtext = null;
+        MessageDigest md = getMessageDigest();
+        // Compute message digest of the input
+        byte[] messageDigest = md.digest(input.getBytes());
+        return convertToHex(messageDigest);
+    }
+
+    private static MessageDigest getMessageDigest() {
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        return md;
+    }
+
+    private static String convertToHex(final byte[] messageDigest) {
+        BigInteger bigint = new BigInteger(1, messageDigest);
+        String hexText = bigint.toString(16);
+        while (hexText.length() < 32) {
+            hexText = "0".concat(hexText);
+        }
+        return hexText;
     }
 
     public static String getRandomHash() {

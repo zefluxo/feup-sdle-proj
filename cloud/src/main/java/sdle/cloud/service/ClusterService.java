@@ -41,7 +41,7 @@ public class ClusterService extends BaseService {
     }
 
     private void heartBeat() {
-        System.out.println(getCluster().getNodes());
+        getCluster().printStatus(getNode());
         ZMQ.Socket heartbeatClientSocket = zmqAdapter.newClientSocket();
         getCluster().getNodes().forEach((id, ip) -> {
             if (!getNode().getId().equals(id)) {
@@ -50,8 +50,6 @@ public class ClusterService extends BaseService {
                     heartbeatFailures.remove(id);
                 } else {
                     heartbeatFailures.merge(id, 1, Integer::sum);
-//                    heartbeatFailures.putIfAbsent(id, 0);
-//                    heartbeatFailures.put(id, heartbeatFailures.get(getNode().getId()) + 1);
                     if (heartbeatFailures.get(id) > MAX_HEARTBEAT_FAILURES) {
                         getCluster().getNodes().remove(id);
                         getCluster().updateClusterHashNodes();
