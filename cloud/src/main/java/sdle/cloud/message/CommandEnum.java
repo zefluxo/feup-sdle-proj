@@ -12,6 +12,7 @@ import sdle.cloud.processor.cloud.ClusterUpdateProcessor;
 import sdle.cloud.processor.shopplist.GetListProcessor;
 import sdle.cloud.processor.shopplist.PutItemProcessor;
 import sdle.cloud.processor.shopplist.PutListProcessor;
+import sdle.cloud.processor.shopplist.ReplicateListProcessor;
 
 @AllArgsConstructor
 @Getter
@@ -24,6 +25,11 @@ public enum CommandEnum {
      * "putList" (no arqs) -> create a new list and return "listHashId"
      */
     PUT_LIST("putList", CommandType.SHOPP_LIST, new PutListProcessor()),
+
+    /**
+     * "replicateList <listHashId> <list>" -> replicate a list and return "listHashId"
+     */
+    REPLICATE_LIST("replicateList", CommandType.SHOPP_LIST, new ReplicateListProcessor()),
 
     /**
      * "getList <listHashId>" -> return the list (json format)

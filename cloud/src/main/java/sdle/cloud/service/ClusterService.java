@@ -2,7 +2,6 @@ package sdle.cloud.service;
 
 import lombok.SneakyThrows;
 import org.json.JSONObject;
-import org.zeromq.ZMQ;
 import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
 import sdle.cloud.message.CommandEnum;
@@ -34,7 +33,7 @@ public class ClusterService extends BaseService {
         getCluster().getNodes().put(getNode().getId(), getNode().getIp());
         getCluster().updateClusterHashNodes();
         scheduledExecutor.schedule(this::joinCluster, 2, TimeUnit.SECONDS);
-        scheduledExecutor.scheduleWithFixedDelay(this::heartBeat, 5, 5, TimeUnit.SECONDS);
+        scheduledExecutor.scheduleWithFixedDelay(this::heartBeat, 5, 10, TimeUnit.SECONDS);
 
         //Signal.handle(new Signal("TERM"), signal -> onInterrupt());
         Signal.handle(new Signal("INT"), signal -> onInterrupt());
@@ -42,24 +41,24 @@ public class ClusterService extends BaseService {
 
     private void heartBeat() {
         getCluster().printStatus(getNode());
-        ZMQ.Socket heartbeatClientSocket = zmqAdapter.newClientSocket();
-        getCluster().getNodes().forEach((id, ip) -> {
-            if (!getNode().getId().equals(id)) {
-                String reply = zmqAdapter.sendMsg(heartbeatClientSocket, (String) ip, getNode().getClusterPort(), CommandEnum.CLUSTER_HEARTBEAT, Collections.emptyList());
-                if (REPLY_OK.equals(reply)) {
-                    heartbeatFailures.remove(id);
-                } else {
-                    heartbeatFailures.merge(id, 1, Integer::sum);
-                    if (heartbeatFailures.get(id) > MAX_HEARTBEAT_FAILURES) {
-                        getCluster().getNodes().remove(id);
-                        getCluster().updateClusterHashNodes();
-                        heartbeatFailures.remove(id);
-                        zmqAdapter.notifyClusterNodesUpdate(getCluster(), getNode());
-                    }
-                }
-            }
-        });
-        heartbeatClientSocket.close();
+//        ZMQ.Socket heartbeatClientSocket = zmqAdapter.newClientSocket();
+//        getCluster().getNodes().forEach((id, ip) -> {
+//            if (!getNode().getId().equals(id)) {
+//                String reply = zmqAdapter.sendMsg(heartbeatClientSocket, (String) ip, getNode().getClusterPort(), CommandEnum.CLUSTER_HEARTBEAT, Collections.emptyList());
+//                if (REPLY_OK.equals(reply)) {
+//                    heartbeatFailures.remove(id);
+//                } else {
+//                    heartbeatFailures.merge(id, 1, Integer::sum);
+//                    if (heartbeatFailures.get(id) > MAX_HEARTBEAT_FAILURES) {
+//                        getCluster().getNodes().remove(id);
+//                        getCluster().updateClusterHashNodes();
+//                        heartbeatFailures.remove(id);
+//                        zmqAdapter.notifyClusterNodesUpdate(getCluster(), getNode());
+//                    }
+//                }
+//            }
+//        });
+//        heartbeatClientSocket.close();
         System.out.printf(" heartbeat failures: %s%n", heartbeatFailures);
     }
 

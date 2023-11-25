@@ -4,9 +4,11 @@ import sdle.cloud.cluster.Cluster;
 import sdle.cloud.processor.BaseProcessor;
 
 public abstract class BaseShoppListProcessor extends BaseProcessor {
+    public static final int REPLICATE_FACTOR = 3;
+
     protected String getListOwner(Cluster cluster, String listHashId) {
         for (String nodeHash : cluster.getNodeHashes().keySet()) {
-            System.out.printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> : %s, %s, %s%n", listHashId, nodeHash, listHashId.compareTo(nodeHash) < 0);
+            //System.out.printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> : %s, %s, %s%n", listHashId, nodeHash, listHashId.compareTo(nodeHash) < 0);
             if (listHashId.compareTo(nodeHash) < 0) {
                 return cluster.getNodeHashes().get(nodeHash);
             }

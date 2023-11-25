@@ -11,10 +11,7 @@ public class HashUtils {
     private static final Random RANDOM = new Random();
 
     public static String getHash(String input) {
-
-        String hashtext = null;
         MessageDigest md = getMessageDigest();
-        // Compute message digest of the input
         byte[] messageDigest = md.digest(input.getBytes());
         return convertToHex(messageDigest);
     }
