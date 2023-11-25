@@ -23,6 +23,7 @@ public class PutItemProcessor extends BaseShoppListProcessor {
                 reply = REPLY_NOT_FOUND;
             } else {
                 shoppList.put(msg.get(3), Integer.valueOf(msg.get(4)));
+                sendReplicateList(zmqAdapter, cluster, node, listHashId, shoppList);
                 System.out.println(cluster.getShoppLists());
                 reply = REPLY_OK;
             }
