@@ -20,6 +20,8 @@ services:
     networks:
       cloud-network:
         ipv4_address: 10.5.0.11
+    ports:
+      - "7799:7799"
 
   cloud-node-2:
     depends_on:
@@ -30,6 +32,8 @@ services:
     networks:
       cloud-network:
         ipv4_address: 10.5.0.12
+    ports:
+      - "17799:7799"
 
   cloud-node-3:
     depends_on:
@@ -40,6 +44,8 @@ services:
     networks:
       cloud-network:
         ipv4_address: 10.5.0.13
+    ports:
+      - "27799:7799"
 
   cloud-node-others:
     depends_on:
@@ -47,7 +53,7 @@ services:
     extends:
       file: common.yaml
       service: cloud-node
-    scale: 5
+    scale: 1
     networks:
       - cloud-network
 

@@ -5,10 +5,7 @@ import lombok.Getter;
 import sdle.cloud.processor.BaseProcessor;
 import sdle.cloud.processor.NotImplementedProcessor;
 import sdle.cloud.processor.NotRecognizedProcessor;
-import sdle.cloud.processor.cloud.ClusterHeartBeatProcessor;
-import sdle.cloud.processor.cloud.ClusterJoinProcessor;
-import sdle.cloud.processor.cloud.ClusterLeaveProcessor;
-import sdle.cloud.processor.cloud.ClusterUpdateProcessor;
+import sdle.cloud.processor.cloud.*;
 import sdle.cloud.processor.shopplist.GetListProcessor;
 import sdle.cloud.processor.shopplist.PutItemProcessor;
 import sdle.cloud.processor.shopplist.PutListProcessor;
@@ -58,12 +55,17 @@ public enum CommandEnum {
 
     // cluster internal messages
     // enviada para um bootstrap node na inicializacao de cada node
-    CLUSTER_JOIN("cluster_join", CommandType.MEMBERSHIP, new ClusterJoinProcessor()),
+    CLUSTER_JOINING("cluster_joining", CommandType.MEMBERSHIP, new ClusterJoiningProcessor()),
+
     // enviada para um bootstrap node quando um node vai ser desligado (desligamento "normal")
-    CLUSTER_LEAVE("cluster_leave", CommandType.MEMBERSHIP, new ClusterLeaveProcessor()),
+    CLUSTER_LEAVING("cluster_leaving", CommandType.MEMBERSHIP, new ClusterLeavingProcessor()),
 
     // enviada pelo bootstrap para todos os nos do cluster, apos receber um join ou leave (ou quando um node for "expulso" do cluster por estar irresponsivo)
     CLUSTER_UPDATE("cluster_update", CommandType.MEMBERSHIP, new ClusterUpdateProcessor()),
+
+    // enviada para um bootstrap node quando um node vai ser desligado (desligamento "normal")
+    CLUSTER_LEAVE("cluster_leave", CommandType.MEMBERSHIP, new ClusterLeaveProcessor()),
+
 
     CLUSTER_HEARTBEAT("cluster_heartbeat", CommandType.MEMBERSHIP, new ClusterHeartBeatProcessor()),
 

@@ -20,6 +20,7 @@ public class Node {
     final String clusterPort;
     final String bootstrap;
     final List<String> bootstrapList = new ArrayList<>();
+    boolean maintenance = false;
     String hashId;
 
     @Synchronized

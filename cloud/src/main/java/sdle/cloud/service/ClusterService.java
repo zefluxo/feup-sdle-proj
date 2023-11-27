@@ -66,7 +66,7 @@ public class ClusterService extends BaseService {
         JSONObject nodeJson = new JSONObject();
         nodeJson.put(getNode().getId(), getNode().getIp());
         String nextBootstrapHostAddr = getNextBootstrapHostAddr();
-        zmqAdapter.sendMsg(nextBootstrapHostAddr, getNode().getClusterPort(), CommandEnum.CLUSTER_JOIN, Collections.singletonList(nodeJson.toString()));
+        zmqAdapter.sendMsg(nextBootstrapHostAddr, getNode().getClusterPort(), CommandEnum.CLUSTER_JOINING, Collections.singletonList(nodeJson.toString()));
         System.out.println("Node added to cluster");
     }
 
@@ -82,7 +82,7 @@ public class ClusterService extends BaseService {
             if (!ip.equals(getNode().getIp())) {
                 JSONObject nodeJson = new JSONObject();
                 nodeJson.put(getNode().getId(), getNode().getIp());
-                zmqAdapter.sendMsg(getNextBootstrapHostAddr(), getNode().getClusterPort(), CommandEnum.CLUSTER_LEAVE, Collections.singletonList(nodeJson.toString()));
+                zmqAdapter.sendMsg(getNextBootstrapHostAddr(), getNode().getClusterPort(), CommandEnum.CLUSTER_LEAVING, Collections.singletonList(nodeJson.toString()));
             }
         });
         System.exit(0);

@@ -8,7 +8,7 @@ import sdle.cloud.utils.ZMQAdapter;
 
 import java.util.List;
 
-public class ClusterJoinProcessor extends BaseCloudProcessor {
+public class ClusterJoiningProcessor extends BaseCloudProcessor {
     @Override
     public String process(ZMQ.Socket serverSocket, ZMQAdapter zmqAdapter, List<String> msg, Cluster cluster, Node node) {
         System.out.printf("JOIN process %s%n", msg);

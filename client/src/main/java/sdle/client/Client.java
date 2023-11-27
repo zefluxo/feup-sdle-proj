@@ -25,6 +25,8 @@ public class Client {
         } catch (InterruptedException e) {
             // throw new RuntimeException(e);
         }
+
+
     }
 
     private static void sendPredefined(ExecutorService executor, ZContext context) throws InterruptedException {
@@ -33,11 +35,11 @@ public class Client {
             int finalRequestNbr = requestNbr;
             executor.submit(() -> sendRequest(context, "host.docker.internal", "putList", Collections.emptyList(), finalRequestNbr));
         }
-        executor.awaitTermination(5, TimeUnit.SECONDS);
+        executor.awaitTermination(10, TimeUnit.MINUTES);
     }
 
     @SneakyThrows
-    private static void sendRequest(ZContext context, String dest, String cmd, List<String> msgArgs, int requestNbr) {
+    private static void sendRequest(ZContext context, String url, String cmd, List<String> msgArgs, int requestNbr) {
         // neste exemplo fazendo a conexao dentro do loop apenas vez para verificar o funcionamento do load balance
         ZMQ.Socket socket = context.createSocket(SocketType.DEALER);
         socket.setReceiveTimeOut(5000);
@@ -45,7 +47,6 @@ public class Client {
         String identity = "ClientId" + new Random().nextInt();
         socket.setIdentity(identity.getBytes(ZMQ.CHARSET));
         //socket.connect("tcp://host.docker.internal:7788");
-        String url = String.format("tcp://%s:7788", dest);
         System.out.printf("identity: %s, url: %s%n", identity, url);
         socket.connect(url);
 

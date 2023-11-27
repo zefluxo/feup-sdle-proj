@@ -26,9 +26,9 @@ cd client
 ### Client command line examples
 
 ```
-java -jar target/client-1.0-SNAPSHOT.one-jar.jar 127.0.0.1 putList
-java -jar target/client-1.0-SNAPSHOT.one-jar.jar 127.0.0.1 getList
-java -jar target/client-1.0-SNAPSHOT.one-jar.jar 127.0.0.1 putItem <listHash> <itemName> <quantity>
+java -jar target/client-1.0-SNAPSHOT.one-jar.jar tcp://127.0.0.1:7788 putList
+java -jar target/client-1.0-SNAPSHOT.one-jar.jar tcp://127.0.0.1:7788 getList
+java -jar target/client-1.0-SNAPSHOT.one-jar.jar tcp://127.0.0.1:7788 putItem <listHash> <itemName> <quantity>
 ```
 
 ### KNOW ISSUES
