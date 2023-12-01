@@ -23,7 +23,11 @@ public class GetListProcessor extends BaseShoppListProcessor {
                 reply = REPLY_NOT_FOUND;
             }
         } else {
-            reply = zmqAdapter.sendMsg(owner, node.getClusterPort(), CommandEnum.GET_LIST, Collections.singletonList(listHashId));
+            if (cluster.getReplicateShoppLists().containsKey(listHashId)) {
+                reply = String.valueOf(cluster.getReplicateShoppLists().get(listHashId));
+            } else {
+                reply = zmqAdapter.sendMsg(owner, node.getClusterPort(), CommandEnum.GET_LIST, Collections.singletonList(listHashId));
+            }
         }
         zmqAdapter.sendReply(serverSocket, msg, reply);
         return reply;
