@@ -33,7 +33,7 @@ public class Client {
         System.out.println("Connecting to cloud server");
         for (int requestNbr = 0; requestNbr != 10; requestNbr++) {
             int finalRequestNbr = requestNbr;
-            executor.submit(() -> sendRequest(context, "host.docker.internal", "putList", Collections.emptyList(), finalRequestNbr));
+            executor.submit(() -> sendRequest(context, "tcp://host.docker.internal:7788", "putList", Collections.emptyList(), finalRequestNbr));
         }
         executor.awaitTermination(10, TimeUnit.MINUTES);
     }
