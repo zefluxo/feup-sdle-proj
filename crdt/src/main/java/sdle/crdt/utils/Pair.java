@@ -1,4 +1,4 @@
-package main.java.sdle.crdt.utils;
+package sdle.crdt.utils;
 
 
 import java.util.Objects;
@@ -17,8 +17,18 @@ public class Pair<F, S> {
         this.second = second;
     }
 
-    public F getFirst() { return first; }
-    public S getSecond() { return second; }
+    // Factory method for convenience
+    public static <A, B> Pair<A, B> of(A first, B second) {
+        return new Pair<>(first, second);
+    }
+
+    public F getFirst() {
+        return first;
+    }
+
+    public S getSecond() {
+        return second;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -42,15 +52,10 @@ public class Pair<F, S> {
     public String toString() {
         assert this.first != null;
         assert this.second != null;
-        return "[Pair: K = " + this.first.toString() + " / V = " + this.second.toString() + "]";
+        return "[Pair: K = " + this.first + " / V = " + this.second + "]";
     }
 
     public boolean isEmpty() {
         return (this.first == null && this.second == null);
-    }
-
-    // Factory method for convenience
-    public static <A, B> Pair<A, B> of(A first, B second) {
-        return new Pair<>(first, second);
     }
 }

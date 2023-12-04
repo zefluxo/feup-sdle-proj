@@ -1,6 +1,6 @@
-package main.java.sdle.crdt.implementations;
+package sdle.crdt.implementations;
 
-import main.java.sdle.crdt.utils.Pair;
+import sdle.crdt.utils.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,8 +10,12 @@ public class DotKernel {
     public Map<Pair<String, Integer>, Integer> dotMap = new HashMap<>();
     public DotContext dotContext = new DotContext();
 
-    public DotKernel() {}
-    public DotKernel(DotContext dotContext) { this.dotContext = dotContext; }
+    public DotKernel() {
+    }
+
+    public DotKernel(DotContext dotContext) {
+        this.dotContext = dotContext;
+    }
 
     public void join(DotKernel dotKernel) {
 
@@ -92,7 +96,7 @@ public class DotKernel {
         DotKernel result = new DotKernel();
         boolean dotExists = this.dotMap.containsKey(dot);
 
-        System.out.println("this dotmap: " + this.dotMap.toString());
+        System.out.println("this dotmap: " + this.dotMap);
 
         if (dotExists) {
             result.dotContext.insertDot(dot, true);

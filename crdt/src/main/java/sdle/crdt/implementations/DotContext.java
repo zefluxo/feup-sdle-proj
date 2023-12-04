@@ -1,17 +1,13 @@
-package main.java.sdle.crdt.implementations;
+package sdle.crdt.implementations;
 
-import main.java.sdle.crdt.utils.Pair;
+import sdle.crdt.utils.Pair;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class DotContext {
 
     public Map<String, Integer> causalContext = new HashMap<>();
-    public Set< Pair<String, Integer> > dotCloud = new HashSet<>();
+    public Set<Pair<String, Integer>> dotCloud = new HashSet<>();
 
     public boolean dotIn(Pair<String, Integer> dot) {
 
@@ -80,7 +76,7 @@ public class DotContext {
 
             }
 
-        } while(flag);
+        } while (flag);
 
     }
 
@@ -91,7 +87,7 @@ public class DotContext {
         Map<String, Integer> otherCC = dotContext.causalContext;
         Set<Pair<String, Integer>> otherDC = dotContext.dotCloud;
 
-        for (String key: otherCC.keySet()) {
+        for (String key : otherCC.keySet()) {
 
             Integer value = otherCC.get(key);
             boolean dotExists = this.causalContext.containsKey(key);
@@ -105,7 +101,9 @@ public class DotContext {
 
         }
 
-        for (Pair<String, Integer> dot: otherDC) { this.insertDot(dot, false); }
+        for (Pair<String, Integer> dot : otherDC) {
+            this.insertDot(dot, false);
+        }
         this.compact();
 
     }
@@ -117,13 +115,13 @@ public class DotContext {
         stringBuilder.append("Context\n");
 
         stringBuilder.append("CC (");
-        for (var entry: this.causalContext.entrySet()) {
-            stringBuilder.append("[" + entry.getKey().toString() + " : " + entry.getValue().toString() + "]");
+        for (var entry : this.causalContext.entrySet()) {
+            stringBuilder.append("[" + entry.getKey() + " : " + entry.getValue().toString() + "]");
         }
 
         stringBuilder.append(")\nDC (");
-        for (Pair<String, Integer> dot: this.dotCloud) {
-            stringBuilder.append("[" + dot.getFirst().toString() + " : " + dot.getSecond().toString() + "]");
+        for (Pair<String, Integer> dot : this.dotCloud) {
+            stringBuilder.append("[" + dot.getFirst() + " : " + dot.getSecond().toString() + "]");
         }
 
         stringBuilder.append(")");

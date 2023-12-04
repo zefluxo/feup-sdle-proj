@@ -1,27 +1,34 @@
-package main.java.sdle.crdt.implementations;
+package sdle.crdt.implementations;
 
-import main.java.sdle.crdt.utils.Pair;
+import sdle.crdt.utils.Pair;
 
 public class CCounter {
 
     private String id = "defaultCCounter";
     private DotKernel dotKernel = new DotKernel();
 
-    public CCounter() {}
-    public CCounter(String id) { this.id = id; }
+    public CCounter() {
+    }
+
+    public CCounter(String id) {
+        this.id = id;
+    }
+
     public CCounter(String id, DotKernel dotKernel) {
         this.id = id;
         this.dotKernel = dotKernel;
     }
 
-    public DotContext context() { return this.dotKernel.dotContext; }
+    public DotContext context() {
+        return this.dotKernel.dotContext;
+    }
 
     public CCounter inc(Integer value) {
 
         CCounter result = new CCounter();
         Integer base = 0;
 
-        for (Pair<String, Integer> key: this.dotKernel.dotMap.keySet()) {
+        for (Pair<String, Integer> key : this.dotKernel.dotMap.keySet()) {
 
             Integer currValue = this.dotKernel.dotMap.get(key);
 
@@ -42,7 +49,7 @@ public class CCounter {
         CCounter result = new CCounter();
         Integer base = 0;
 
-        for (Pair<String, Integer> key: this.dotKernel.dotMap.keySet()) {
+        for (Pair<String, Integer> key : this.dotKernel.dotMap.keySet()) {
 
             Integer currValue = this.dotKernel.dotMap.get(key);
 
@@ -63,7 +70,7 @@ public class CCounter {
 
         Integer result = 0;
 
-        for (Pair<String, Integer> key: this.dotKernel.dotMap.keySet()) {
+        for (Pair<String, Integer> key : this.dotKernel.dotMap.keySet()) {
 
             Integer value = this.dotKernel.dotMap.get(key);
             result += value;
@@ -74,7 +81,9 @@ public class CCounter {
 
     }
 
-    public void join(CCounter counter) { this.dotKernel.join(counter.dotKernel); }
+    public void join(CCounter counter) {
+        this.dotKernel.join(counter.dotKernel);
+    }
 
     public CCounter reset() {
         CCounter result = new CCounter();

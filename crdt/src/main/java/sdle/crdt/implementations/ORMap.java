@@ -1,7 +1,7 @@
-package main.java.sdle.crdt.implementations;
+package sdle.crdt.implementations;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 // Implementation only allows for mapping Strings to CCounters
 public class ORMap {
@@ -10,15 +10,25 @@ public class ORMap {
     private Map<String, CCounter> map = new HashMap<>();
     private DotContext dotContext = new DotContext();
 
-    public ORMap() {}
-    public ORMap(String id) { this.id = id; }
+    public ORMap() {
+    }
+
+    public ORMap(String id) {
+        this.id = id;
+    }
+
     public ORMap(ORMap aworMap) {
         this.dotContext = aworMap.context();
         this.map = aworMap.map();
     }
 
-    public Map<String, CCounter> map() { return this.map; }
-    public DotContext context() { return this.dotContext; }
+    public Map<String, CCounter> map() {
+        return this.map;
+    }
+
+    public DotContext context() {
+        return this.dotContext;
+    }
 
     public CCounter get(String key) {
 
@@ -30,7 +40,10 @@ public class ORMap {
 
     }
 
-    public void put(String key, CCounter item) { this.map.put(key, item); }
+    public void put(String key, CCounter item) {
+        this.map.put(key, item);
+    }
+
     public ORMap remove(String key) {
 
         ORMap result = new ORMap();
@@ -52,7 +65,7 @@ public class ORMap {
 
         if (!this.map.isEmpty()) {
 
-            for (var entry: this.map.entrySet()) {
+            for (var entry : this.map.entrySet()) {
                 CCounter counter = entry.getValue().reset();
                 result.dotContext.join(counter.context());
             }
@@ -69,7 +82,7 @@ public class ORMap {
 
         DotContext context = this.dotContext;
 
-        for (var entry: this.map.entrySet()) {
+        for (var entry : this.map.entrySet()) {
 
             String key = entry.getKey();
             CCounter value = entry.getValue();
@@ -84,7 +97,7 @@ public class ORMap {
 
         }
 
-        for (var entry: otherMap.map().entrySet()) {
+        for (var entry : otherMap.map().entrySet()) {
 
             String key = entry.getKey();
             CCounter value = entry.getValue();
@@ -104,8 +117,8 @@ public class ORMap {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(id + ": (");
 
-        for (var entry: this.map.entrySet()) {
-            stringBuilder.append("[" + entry.getKey().toString() + " : " + entry.getValue().read() + "]");
+        for (var entry : this.map.entrySet()) {
+            stringBuilder.append("[" + entry.getKey() + " : " + entry.getValue().read() + "]");
         }
 
         stringBuilder.append(")");
