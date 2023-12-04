@@ -96,16 +96,11 @@ public class DotKernel {
         DotKernel result = new DotKernel();
         boolean dotExists = this.dotMap.containsKey(dot);
 
-        System.out.println("this dotmap: " + this.dotMap);
-
         if (dotExists) {
             result.dotContext.insertDot(dot, true);
             this.dotMap.remove(dot);
         }
 
-        System.out.println("this dotmap (after): " + this.dotMap.toString());
-        System.out.println("result dotmap: " + this.dotMap.toString());
-        //throw new Error();
         return result;
 
     }

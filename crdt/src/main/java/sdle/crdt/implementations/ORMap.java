@@ -6,7 +6,7 @@ import java.util.Map;
 // Implementation only allows for mapping Strings to CCounters
 public class ORMap {
 
-    private String id = "defaultAWORMap";
+    private String id = "defaultORMap";
     private Map<String, CCounter> map = new HashMap<>();
     private DotContext dotContext = new DotContext();
 
@@ -17,9 +17,9 @@ public class ORMap {
         this.id = id;
     }
 
-    public ORMap(ORMap aworMap) {
-        this.dotContext = aworMap.context();
-        this.map = aworMap.map();
+    public ORMap(ORMap orMap) {
+        this.dotContext = orMap.context();
+        this.map = orMap.map();
     }
 
     public Map<String, CCounter> map() {
