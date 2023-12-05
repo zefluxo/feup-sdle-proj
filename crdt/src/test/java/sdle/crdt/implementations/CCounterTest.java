@@ -3,6 +3,8 @@ package sdle.crdt.implementations;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
+
 class CCounterTest {
 
     @Test
@@ -34,13 +36,13 @@ class CCounterTest {
 
     @Test
     void join() {
-        CCounter counter1 = new CCounter("counter1");
+        CCounter counter1 = new CCounter(UUID.randomUUID().toString());
         counter1.inc(10);
         counter1.dec(2);
         counter1.inc(1);
         Assertions.assertEquals(9, counter1.read());
 
-        CCounter counter2 = new CCounter("counter2");
+        CCounter counter2 = new CCounter(UUID.randomUUID().toString());
         counter2.inc(2);
         counter2.dec(1);
         counter2.inc(1);

@@ -1,28 +1,12 @@
-#
-# BUILD STAGE
-#
-#FROM maven:3.8.3-eclipse-temurin-17 as build
-#WORKDIR /usr/app
-#COPY ../../src /usr/src/app/src
-#COPY ../../pom.xml /usr/src/app
-#RUN --mount=type=cache,target=/root/.m2 mvn clean package
-
-FROM maven:3.8.3-eclipse-temurin-17 as build
-RUN mkdir /usr/src/app
-COPY src/ /usr/src/app/src
-COPY pom.xml /usr/src/app
-RUN --mount=type=cache,target=/root/.m2 mvn -f /usr/src/app/pom.xml clean package
-
-
 FROM registry.access.redhat.com/ubi8/openjdk-17:1.18
 
 ENV LANGUAGE='en_US:en'
 
 # We make four distinct layers so if there are application changes the library layers can be re-used
-COPY --from=build --chown=185  /usr/src/app/target/quarkus-app/lib/ /deployments/lib/
-COPY --from=build --chown=185  /usr/src/app/target/quarkus-app/*.jar /deployments/
-COPY --from=build --chown=185  /usr/src/app/target/quarkus-app/app/ /deployments/app/
-COPY --from=build --chown=185  /usr/src/app/target/quarkus-app/quarkus/ /deployments/quarkus/
+COPY --chown=185 target/quarkus-app/lib/ /deployments/lib/
+COPY --chown=185 target/quarkus-app/*.jar /deployments/
+COPY --chown=185 target/quarkus-app/app/ /deployments/app/
+COPY --chown=185 target/quarkus-app/quarkus/ /deployments/quarkus/
 
 EXPOSE 7788
 USER 185

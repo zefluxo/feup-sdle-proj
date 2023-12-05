@@ -3,8 +3,13 @@
 For now, just a "archetype" with working load balancer, with a simple ZeroMQ REQ/REP app)
 
 - Needs docker installed (tested with docker desktop on widows v4.25.1)
-- for running without docker, need jdk 17+ and maven installed
+- NEED jdk 17+ and maven installed
 
+### CRDT
+```
+cd crdt
+mvn clean install
+```
 ### Cloud
 
 ```
@@ -23,7 +28,7 @@ cd client
 ./run.sh
 ```
 
-### Client command line examples
+### Client command line examples (# only with ZeroMQ version of cloud)
 
 ```
 java -jar target/client-1.0-SNAPSHOT.one-jar.jar tcp://127.0.0.1:7788 putList
@@ -32,11 +37,6 @@ java -jar target/client-1.0-SNAPSHOT.one-jar.jar tcp://127.0.0.1:7788 putItem <l
 ```
 
 ### KNOW ISSUES
-
-- concurrency problems (some will be resolved with CRDT implementation)
-- occasional ZeroMQ connecting problems not been proper treated
-- need a heartbeat mechanism
-- replication: need a proper evaluation, maybe will not needed, after CRDT are implemented
 
 ###
 

@@ -26,6 +26,7 @@ public class Node {
     String hashId;
 
     boolean maintenance = false;
+    boolean initializing = true;
 
     Node() {
         //

@@ -9,7 +9,6 @@ import lombok.SneakyThrows;
 import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
 
-import java.net.UnknownHostException;
 import java.util.*;
 
 @ApplicationScoped
@@ -25,7 +24,7 @@ public class ShoppListService extends BaseService {
         //
     }
 
-    void onStart(@Observes StartupEvent ev) throws UnknownHostException {
+    void onStart(@Observes StartupEvent ev) {
         init(cluster, node);
     }
 
@@ -34,7 +33,7 @@ public class ShoppListService extends BaseService {
     public String processPutList(String listHashId, Map<String, Integer> shoppList) {
         System.out.printf("PUT LIST process %s, %s %n", listHashId, shoppList);
         String ownerIp = getListOwner(cluster, listHashId);
-        System.out.printf("%s, %s, %s, %s %n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()), shoppList);
+        //System.out.printf("%s, %s, %s, %s %n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()), shoppList);
         if (ownerIp.equals(node.getIp())) {
             cluster.getShoppLists().put(listHashId, shoppList);
             cluster.getReplicateShoppLists().remove(listHashId);
@@ -61,7 +60,7 @@ public class ShoppListService extends BaseService {
     public Map<String, Integer> processGetList(String listHashId) {
         System.out.printf("GET LIST process %s%n", listHashId);
         String ownerIp = getListOwner(cluster, listHashId);
-        System.out.printf("%s, %s, %s%n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()));
+        //System.out.printf("%s, %s, %s%n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()));
         @Nullable Map<String, Integer> reply;
         if (ownerIp.equals(node.getIp())) {
             reply = cluster.getShoppLists().get(listHashId);
@@ -82,7 +81,7 @@ public class ShoppListService extends BaseService {
     public String processPutItem(String listHashId, String name, Integer quantity) {
         System.out.printf("PUT ITEM process %s %s %s%n", listHashId, name, quantity);
         String ownerIp = getListOwner(cluster, listHashId);
-        System.out.printf("%s, %s, %s%n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()));
+        //System.out.printf("%s, %s, %s%n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()));
         String reply;
         if (ownerIp.equals(node.getIp())) {
             Map<String, Integer> shoppList = cluster.getShoppLists().get(listHashId);
@@ -121,9 +120,6 @@ public class ShoppListService extends BaseService {
         List<String> replicateHashes = new ArrayList<>();
         while (iterator.hasNext()) {
             next = iterator.next();
-            System.out.println(next);
-            System.out.println(node.getHashId());
-            System.out.println(next.equals(node.getHashId()));
             if (next.equals(node.getHashId())) {
                 for (int i = 1; i < (Math.min(REPLICATE_FACTOR, cluster.getNodeHashes().size())); i++) {
                     if (!iterator.hasNext()) {
