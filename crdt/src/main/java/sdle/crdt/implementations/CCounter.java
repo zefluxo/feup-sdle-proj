@@ -1,7 +1,9 @@
 package sdle.crdt.implementations;
 
+import lombok.Data;
 import sdle.crdt.utils.Pair;
 
+@Data
 public class CCounter {
 
     private String id = "defaultCCounter";

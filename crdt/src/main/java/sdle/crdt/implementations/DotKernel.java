@@ -1,10 +1,13 @@
 package sdle.crdt.implementations;
 
+import lombok.Data;
 import sdle.crdt.utils.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
 
+
+@Data
 public class DotKernel {
 
     public Map<Pair<String, Integer>, Integer> dotMap = new HashMap<>();

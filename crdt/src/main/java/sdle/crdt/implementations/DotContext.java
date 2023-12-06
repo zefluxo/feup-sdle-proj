@@ -1,9 +1,11 @@
 package sdle.crdt.implementations;
 
+import lombok.Data;
 import sdle.crdt.utils.Pair;
 
 import java.util.*;
 
+@Data
 public class DotContext {
 
     public Map<String, Integer> causalContext = new HashMap<>();

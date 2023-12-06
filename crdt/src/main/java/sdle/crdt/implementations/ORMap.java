@@ -1,9 +1,12 @@
 package sdle.crdt.implementations;
 
+import lombok.Data;
+
 import java.util.HashMap;
 import java.util.Map;
 
 // Implementation only allows for mapping Strings to CCounters
+@Data
 public class ORMap {
 
     private String id = "defaultORMap";

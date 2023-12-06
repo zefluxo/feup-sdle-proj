@@ -1,6 +1,11 @@
 package sdle.crdt.implementations;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.junit.jupiter.api.Test;
+import sdle.crdt.utils.Pair;
+import sdle.crdt.utils.PairKeyDeserializer;
 
 import java.util.Map;
 import java.util.UUID;
@@ -100,4 +105,29 @@ class ORMapTest {
                 () -> assertEquals(2, orMap1.get(KEY_ARROZ).read())
         );
     }
+
+    @Test
+    void testSerializeDeserialiseJSon() throws JsonProcessingException {
+        ORMap orMap1 = new ORMap(UUID.randomUUID().toString());
+        orMap1.put(KEY_ARROZ, new CCounter(UUID.randomUUID().toString()));
+        orMap1.get(KEY_ARROZ).inc(3);
+        orMap1.get(KEY_ARROZ).dec(1);
+        orMap1.get(KEY_ARROZ).inc(2);
+
+//        ORMap orMap1 = new ORMap();
+
+        SimpleModule nioModule = new SimpleModule();
+        nioModule.addKeyDeserializer(Pair.class, new PairKeyDeserializer());
+
+        ObjectMapper mapper = new ObjectMapper();
+//        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        mapper.registerModule(nioModule);
+
+        String orMapSerialized = mapper.writeValueAsString(orMap1);
+        System.out.println(orMapSerialized);
+        ORMap orMap2 = mapper.readValue(orMapSerialized, ORMap.class);
+        assertEquals(4, orMap1.get(KEY_ARROZ).read());
+        assertEquals(4, orMap2.get(KEY_ARROZ).read());
+    }
 }
+
