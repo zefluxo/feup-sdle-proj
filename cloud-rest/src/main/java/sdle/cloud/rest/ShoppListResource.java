@@ -6,9 +6,9 @@ import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 import sdle.cloud.service.ShoppListService;
 import sdle.cloud.utils.HashUtils;
+import sdle.crdt.implementations.ORMap;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.UUID;
 
 @Path("/api/shopp")
 public class ShoppListResource implements AutoCloseable {
@@ -19,7 +19,7 @@ public class ShoppListResource implements AutoCloseable {
     @GET
     @Path("/list/{hash}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, Integer> getList(@PathParam String hash) {
+    public ORMap getList(@PathParam String hash) {
         return shoppListService.processGetList(hash);
     }
 
@@ -28,7 +28,7 @@ public class ShoppListResource implements AutoCloseable {
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/list")
     public String newList() {
-        return shoppListService.processPutList(HashUtils.getRandomHash(), new HashMap<>());
+        return shoppListService.processPutList(HashUtils.getRandomHash(), new ORMap(UUID.randomUUID().toString()));
     }
 
     @PUT
@@ -36,14 +36,14 @@ public class ShoppListResource implements AutoCloseable {
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/list/{hash}")
     public String putEmptyList(@PathParam String hash) {
-        return shoppListService.processPutList(hash, new HashMap<>());
+        return shoppListService.processPutList(hash, new ORMap(UUID.randomUUID().toString()));
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/list/{hash}")
-    public String putList(@PathParam String hash, Map<String, Integer> shoppList) {
+    public String putList(@PathParam String hash, ORMap shoppList) {
         return shoppListService.processPutList(hash, shoppList);
     }
 
@@ -51,7 +51,7 @@ public class ShoppListResource implements AutoCloseable {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/replicate/{hash}")
-    public String replicateList(@PathParam String hash, Map<String, Integer> shoppList) {
+    public String replicateList(@PathParam String hash, ORMap shoppList) {
         return shoppListService.processReplicateList(hash, shoppList);
     }
 
@@ -64,7 +64,7 @@ public class ShoppListResource implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         //
     }
 }

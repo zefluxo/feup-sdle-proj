@@ -5,6 +5,7 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Singleton;
 import lombok.Data;
 import sdle.cloud.utils.HashUtils;
+import sdle.crdt.implementations.ORMap;
 
 import java.util.Map;
 import java.util.TreeMap;
@@ -15,8 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Cluster {
 
     // TODO: a ideia eh depois usar aqui um "CRDMap", simplificando a questao da concorrencia
-    Map<String, Map<String, Integer>> shoppLists = new ConcurrentHashMap<>();
-    Map<String, Map<String, Integer>> replicateShoppLists = new ConcurrentHashMap<>();
+    Map<String, ORMap> shoppLists = new ConcurrentHashMap<>();
+    Map<String, ORMap> replicateShoppLists = new ConcurrentHashMap<>();
 
     Map<String, Object> nodes = new ConcurrentHashMap<>();
     TreeMap<String, String> nodeHashes = new TreeMap<>();
