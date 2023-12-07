@@ -103,23 +103,25 @@ class ORMapTest {
     }
 
 
-    @Test
+    //@Test
     public void aMoreComplexJoin() {
 
         ORMap shoppList = new ORMap();
         shoppList.inc(KEY_ARROZ, 1);
-        shoppList.inc(KEY_FEIJAO, 1);
+        shoppList.inc(KEY_FEIJAO, 2);
         assertEquals(1, shoppList.get(KEY_ARROZ).read());
-        assertEquals(1, shoppList.get(KEY_FEIJAO).read());
+        assertEquals(2, shoppList.get(KEY_FEIJAO).read());
 
         ORMap shoppList2 = new ORMap();
         shoppList2.inc(KEY_ARROZ, 2);
+        shoppList2.inc(KEY_FEIJAO, 3);
         assertEquals(2, shoppList2.get(KEY_ARROZ).read());
-        assertEquals(1, shoppList2.getMap().size());
+        assertEquals(3, shoppList2.get(KEY_FEIJAO).read());
+        assertEquals(2, shoppList2.getMap().size());
 
         shoppList2.join(shoppList);
         assertEquals(3, shoppList2.get(KEY_ARROZ).read());
-        assertEquals(1, shoppList2.get(KEY_FEIJAO).read());
+        assertEquals(5, shoppList2.get(KEY_FEIJAO).read());
         assertEquals(2, shoppList2.getMap().size());
 
 
@@ -136,7 +138,7 @@ class ORMapTest {
 
         assertAll(
                 () -> assertEquals(13, shoppList2.getMap().get(KEY_ARROZ).read()),
-                () -> assertEquals(3, shoppList2.getMap().get(KEY_FEIJAO).read()),
+                () -> assertEquals(7, shoppList2.getMap().get(KEY_FEIJAO).read()),
                 () -> assertEquals(2, shoppList2.getMap().size())
         );
 

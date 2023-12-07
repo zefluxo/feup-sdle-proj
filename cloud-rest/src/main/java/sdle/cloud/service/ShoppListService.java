@@ -82,8 +82,9 @@ public class ShoppListService extends BaseService {
     }
 
     @SneakyThrows
-    public String processPutItem(String listHashId, String name, Integer quantity) {
-        System.out.printf("PUT ITEM process %s %s %s%n", listHashId, name, quantity);
+    public String processPutItem(String listHashId, String name, Integer quantity, boolean isInc) {
+        String incOrDec = isInc ? "inc" : "dec";
+        System.out.printf("CHANGE ITEM process %s (%s) %s %s  %n", listHashId, name, quantity, incOrDec);
         String ownerIp = getListOwner(cluster, node, listHashId);
         //System.out.printf("%s, %s, %s%n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()));
         String reply;
@@ -92,13 +93,17 @@ public class ShoppListService extends BaseService {
             if (shoppList == null) {
                 reply = null;
             } else {
-                shoppList.inc(name, quantity);
+                if (isInc) {
+                    shoppList.inc(name, quantity);
+                } else {
+                    shoppList.dec(name, quantity);
+                }
                 sendReplicateList(listHashId, shoppList);
                 System.out.println(cluster.getShoppLists());
                 reply = REPLY_OK;
             }
         } else {
-            String url = String.format("/api/shopp/list/%s/%s/%s", listHashId, name, quantity);
+            String url = String.format("/api/shopp/list/%s/%s/%s/%s", listHashId, incOrDec, name, quantity);
             reply = restClient.post(ownerIp, url)
                     .send().toCompletionStage().toCompletableFuture().get().bodyAsString();
         }

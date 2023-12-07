@@ -58,9 +58,17 @@ public class ShoppListResource implements AutoCloseable {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/list/{hash}/{name}/{quantity}")
-    public String putItem(@PathParam String hash, @PathParam String name, @PathParam Integer quantity) {
-        return shoppListService.processPutItem(hash, name, quantity);
+    @Path("/list/{hash}/inc/{name}/{quantity}")
+    public String incItem(@PathParam String hash, @PathParam String name, @PathParam Integer quantity) {
+        return shoppListService.processPutItem(hash, name, quantity, true);
+    }
+
+    @POST
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/list/{hash}/dec/{name}/{quantity}")
+    public String decItem(@PathParam String hash, @PathParam String name, @PathParam Integer quantity) {
+        return shoppListService.processPutItem(hash, name, quantity, false);
     }
 
     @Override
