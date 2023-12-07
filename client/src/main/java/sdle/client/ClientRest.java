@@ -24,7 +24,7 @@ public class ClientRest {
         //  Socket to talk to server
 
         WebClient restClient = WebClient.create(Vertx.vertx(),
-                new WebClientOptions().setProtocolVersion(HttpVersion.HTTP_2).setDefaultPort(7788));
+                new WebClientOptions().setProtocolVersion(HttpVersion.HTTP_1_1).setDefaultPort(7788).setConnectTimeout(2000));
 
 
         if (args.length < 1) {

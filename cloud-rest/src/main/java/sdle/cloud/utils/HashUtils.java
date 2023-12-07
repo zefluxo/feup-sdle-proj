@@ -1,10 +1,13 @@
 package sdle.cloud.utils;
 
-import java.math.BigInteger;
+import jakarta.xml.bind.DatatypeConverter;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 
 public class HashUtils {
 
@@ -13,7 +16,16 @@ public class HashUtils {
     public static String getHash(String input) {
         MessageDigest md = getMessageDigest();
         byte[] messageDigest = md.digest(input.getBytes());
-        return convertToHex(messageDigest);
+        return DatatypeConverter.printHexBinary(messageDigest);
+    }
+
+    public static String getNextHashId(String newHashId, TreeMap<String, String> nodesHashes) {
+        if (nodesHashes.isEmpty()) return null;
+        Map.Entry<String, String> nextNodeEntry = nodesHashes.higherEntry(newHashId);
+        if (nextNodeEntry != null) {
+            return nextNodeEntry.getKey();
+        }
+        return nodesHashes.firstEntry().getKey();
     }
 
     private static MessageDigest getMessageDigest() {
@@ -24,15 +36,6 @@ public class HashUtils {
             throw new RuntimeException(e);
         }
         return md;
-    }
-
-    private static String convertToHex(final byte[] messageDigest) {
-        BigInteger bigint = new BigInteger(1, messageDigest);
-        String hexText = bigint.toString(16);
-        while (hexText.length() < 32) {
-            hexText = "0".concat(hexText);
-        }
-        return hexText;
     }
 
     public static String getRandomHash() {

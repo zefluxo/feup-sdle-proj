@@ -36,7 +36,7 @@ public class ShoppListResource implements AutoCloseable {
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/list/{hash}")
     public String putEmptyList(@PathParam String hash) {
-        return shoppListService.processPutList(hash, new ORMap(UUID.randomUUID().toString()));
+        return shoppListService.processPutList(hash, new ORMap());
     }
 
     @POST

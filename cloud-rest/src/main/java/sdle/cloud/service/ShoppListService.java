@@ -7,10 +7,12 @@ import jakarta.inject.Inject;
 import lombok.SneakyThrows;
 import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
-import sdle.crdt.implementations.CCounter;
 import sdle.crdt.implementations.ORMap;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 @ApplicationScoped
 public class ShoppListService extends BaseService {
@@ -33,8 +35,9 @@ public class ShoppListService extends BaseService {
     @SneakyThrows
     public String processPutList(String listHashId, ORMap shoppList) {
         System.out.printf("PUT LIST process %s, %s %n", listHashId, shoppList);
-        String ownerIp = getListOwner(cluster, listHashId);
-        //System.out.printf("%s, %s, %s, %s %n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()), shoppList);
+
+        String ownerIp = getListOwner(cluster, node, listHashId);
+        System.out.printf("%s, %s, %s, %s %n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()), shoppList);
         if (ownerIp.equals(node.getIp())) {
             cluster.getShoppLists().put(listHashId, shoppList);
             cluster.getReplicateShoppLists().remove(listHashId);
@@ -42,12 +45,11 @@ public class ShoppListService extends BaseService {
             sendReplicateList(listHashId, shoppList);
             System.out.println(cluster.getShoppLists());
         } else {
+            String url = String.format("/api/shopp/list/%s", listHashId);
             if (shoppList.getMap().isEmpty()) {
-                String url = String.format("/api/shopp/list/%s", listHashId);
                 return restClient.put(ownerIp, url).send()
                         .toCompletionStage().toCompletableFuture().get().bodyAsString();
             } else {
-                String url = String.format("/api/shopp/list/%s", listHashId);
                 return restClient.post(ownerIp, url).sendJson(shoppList)
                         .toCompletionStage().toCompletableFuture().get().bodyAsString();
             }
@@ -60,7 +62,7 @@ public class ShoppListService extends BaseService {
     @SneakyThrows
     public ORMap processGetList(String listHashId) {
         System.out.printf("GET LIST process %s%n", listHashId);
-        String ownerIp = getListOwner(cluster, listHashId);
+        String ownerIp = getListOwner(cluster, node, listHashId);
 //        System.out.printf("%s, %s, %s%n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()));
         ORMap reply;
         if (ownerIp.equals(node.getIp())) {
@@ -82,7 +84,7 @@ public class ShoppListService extends BaseService {
     @SneakyThrows
     public String processPutItem(String listHashId, String name, Integer quantity) {
         System.out.printf("PUT ITEM process %s %s %s%n", listHashId, name, quantity);
-        String ownerIp = getListOwner(cluster, listHashId);
+        String ownerIp = getListOwner(cluster, node, listHashId);
         //System.out.printf("%s, %s, %s%n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()));
         String reply;
         if (ownerIp.equals(node.getIp())) {
@@ -90,9 +92,7 @@ public class ShoppListService extends BaseService {
             if (shoppList == null) {
                 reply = null;
             } else {
-                CCounter counter = new CCounter(UUID.randomUUID().toString());
-                counter.inc(quantity);
-                shoppList.put(name, counter);
+                shoppList.inc(name, quantity);
                 sendReplicateList(listHashId, shoppList);
                 System.out.println(cluster.getShoppLists());
                 reply = REPLY_OK;
@@ -108,19 +108,17 @@ public class ShoppListService extends BaseService {
     protected void sendReplicateList(String listHashId, ORMap shoppList) {
         List<String> replicaHashes = getReplicateHashes();
         System.out.println(listHashId + " Will be replicate to " + replicaHashes);
-        replicaHashes.forEach(hash -> {
-            restClient.post(cluster.getNodeHashes().get(hash), String.format("/api/shopp/replicate/%s", listHashId))
-                    .sendJson(shoppList)
-                    .onFailure(Throwable::printStackTrace)
-                    .onSuccess(r -> System.out.println(listHashId + " replicated to " + cluster.getNodeHashes().get(hash)));
-        });
+        replicaHashes.forEach(hash -> restClient.post(cluster.getNodeHashes().get(hash), String.format("/api/shopp/replicate/%s", listHashId))
+                .sendJson(shoppList)
+                .onFailure(Throwable::printStackTrace)
+                .onSuccess(r -> System.out.println(listHashId + " replicated to " + cluster.getNodeHashes().get(hash))));
     }
 
     protected List<String> getReplicateHashes() {
         Set<String> hashes = cluster.getNodeHashes().keySet();
         System.out.println(hashes);
         Iterator<String> iterator = hashes.iterator();
-        String next = "";
+        String next;
         List<String> replicateHashes = new ArrayList<>();
         while (iterator.hasNext()) {
             next = iterator.next();

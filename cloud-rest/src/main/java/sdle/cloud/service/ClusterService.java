@@ -14,19 +14,17 @@ import sdle.cloud.utils.HashUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
+import java.util.concurrent.atomic.AtomicReference;
 
 @ApplicationScoped
 public class ClusterService extends BaseService {
-    private static final Integer MAX_HEARTBEAT_FAILURES = 2;
+    //    private static final Integer MAX_HEARTBEAT_FAILURES = 2;
     private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(10);
-    private final Map<String, Integer> heartbeatFailures = new ConcurrentHashMap<>();
 
+    //    private final Map<String, Integer> heartbeatFailures = new ConcurrentHashMap<>();
 
     @Inject
     NodeConfiguration config;
@@ -35,6 +33,7 @@ public class ClusterService extends BaseService {
 
     @Inject
     Cluster cluster;
+
 
     ClusterService() {
         //
@@ -53,7 +52,7 @@ public class ClusterService extends BaseService {
     }
 
     private void joinCluster() {
-        restClient.post(getNextBootstrapHostAddr(), String.format("/api/cluster/joining/%s/%s",
+        restClient.post(getNextBootstrapHostAddr(cluster, node), String.format("/api/cluster/joining/%s/%s",
                         node.getId(),
                         node.getIp()))
                 .send()
@@ -79,15 +78,6 @@ public class ClusterService extends BaseService {
         });
     }
 
-    private String getNextBootstrapHostAddr() {
-        //System.out.println(config.getBootstrapList());
-        String ip = node.getIp();
-        while (Objects.equals(ip, node.getIp())) {
-            ip = config.getBootstrapList().get(cluster.getNextBootstrapHost());
-            cluster.setNextBootstrapHost((cluster.getNextBootstrapHost() + 1) % config.getBootstrapList().size());
-        }
-        return ip;
-    }
 
     public String processJoining(String id, String ip) {
         System.out.printf("JOINING process %s, %s%n", id, ip);
@@ -103,9 +93,7 @@ public class ClusterService extends BaseService {
     public String processLeaving(String id) {
         System.out.printf("LEAVING process %s%n", id);
         synchronized (this) {
-            System.out.println(cluster.getNodes());
             cluster.getNodes().remove(id);
-            System.out.println(cluster.getNodes());
             cluster.updateClusterHashNodes();
         }
         notifyClusterNodesUpdate();
@@ -124,7 +112,7 @@ public class ClusterService extends BaseService {
         sendLeavingMsg();
 
         cluster.getShoppLists().forEach((shoppListHashId, shoppList) -> {
-            String ownerIp = getListOwner(cluster, shoppListHashId);
+            String ownerIp = getListOwner(cluster, node, shoppListHashId);
             try {
                 restClient.post(ownerIp, String.format("/api/shopp/list/%s", shoppListHashId))
                         .sendJson(shoppList).toCompletionStage().toCompletableFuture().get();
@@ -134,7 +122,7 @@ public class ClusterService extends BaseService {
         });
 
         cluster.getReplicateShoppLists().forEach((shoppListHashId, shoppList) -> {
-            String ownerIp = getListOwner(cluster, shoppListHashId);
+            String ownerIp = getListOwner(cluster, node, shoppListHashId);
             try {
                 restClient.post(ownerIp, String.format("/api/shopp/list/%s", shoppListHashId))
                         .sendJson(shoppList).toCompletionStage().toCompletableFuture().get();
@@ -154,48 +142,43 @@ public class ClusterService extends BaseService {
 
     public String processUpdate(Map<String, String> newClusterNodes) {
         System.out.printf("UPDATE process %s%n", newClusterNodes);
-
         if (newClusterNodes.equals(cluster.getNodes())) return REPLY_OK;
 
-        Stream<Map.Entry<String, String>> newNodes = newClusterNodes.entrySet().stream().filter(ip -> !cluster.getNodes().containsKey(ip));
+        List<String> newNodeIds = newClusterNodes.keySet().stream().filter(key -> !cluster.getNodes().containsKey(key))
+                .toList();
         synchronized (this) {
             cluster.getNodes().clear();
             cluster.getNodes().putAll(newClusterNodes);
             cluster.updateClusterHashNodes();
         }
-        newNodes.forEach(newNode -> {
+        if (node.isInitializing() || cluster.getNodeHashes().isEmpty()) {
+            node.setInitializing(false);
+        } else {
             List<String> toBeRemoved = new ArrayList<>();
-            String nextHashId = getNextHashId(HashUtils.getHash(newNode.getKey()));
-            if (node.getHashId().equals(nextHashId)) {
-                cluster.getShoppLists().forEach((shoppListHashId, shoppList) -> {
-                    String ownerIp = getListOwner(cluster, shoppListHashId);
-                    if (!ownerIp.equals(node.getIp())) {
-                        try {
-                            restClient.post(ownerIp, String.format("/api/shopp/list/%s", shoppListHashId))
-                                    .sendJson(shoppList).toCompletionStage().toCompletableFuture().get();
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
+            AtomicReference<String> nextHashId = new AtomicReference<>();
+            newNodeIds.forEach(newNodeId -> {
+                nextHashId.set(HashUtils.getNextHashId(HashUtils.getHash(newNodeId), cluster.getNodeHashes()));
+                if (node.getHashId().equals(nextHashId.get())) {
+                    cluster.getShoppLists().forEach((shoppListHashId, shoppList) -> {
+                        String ownerIp = getListOwner(cluster, node, shoppListHashId);
+                        if (!ownerIp.equals(node.getIp())) {
+                            try {
+                                restClient.post(ownerIp, String.format("/api/shopp/list/%s", shoppListHashId))
+                                        .sendJson(shoppList).toCompletionStage().toCompletableFuture().get();
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                            toBeRemoved.add(shoppListHashId);
                         }
-                        toBeRemoved.add(shoppListHashId);
-                    }
-                });
-                toBeRemoved.forEach(shoppListHashId -> cluster.getShoppLists().remove(shoppListHashId));
-            }
-            //System.out.printf("%s%n %s%n %s %s%n", cluster.getNodeHashes(), toBeRemoved, node.getHashId(), nextHashId);
-        });
+                    });
+                    toBeRemoved.forEach(shoppListHashId -> cluster.getShoppLists().remove(shoppListHashId));
+                }
+                //System.out.printf("%s%n %s%n %s %s%n", cluster.getNodeHashes(), toBeRemoved, node.getHashId(), nextHashId);
+            });
+        }
         return REPLY_OK;
     }
 
-    private String getNextHashId(String newHashId) {
-        if (cluster.getNodeHashes().containsKey(newHashId)) {
-            Map.Entry<String, String> nextNodeEntry = cluster.getNodeHashes().higherEntry(newHashId);
-            if (nextNodeEntry != null) {
-                return nextNodeEntry.getKey();
-            }
-            return cluster.getNodeHashes().firstEntry().getKey();
-        }
-        return null;
-    }
 
     public void notifyClusterNodesUpdate() {
         System.out.printf("Updating the cluster %s%n", cluster.getNodes());

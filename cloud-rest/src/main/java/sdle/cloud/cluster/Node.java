@@ -28,7 +28,7 @@ public class Node {
     boolean maintenance = false;
     boolean initializing = true;
 
-    Node() {
+    public Node() {
         //
     }
 

@@ -1,8 +1,13 @@
 package sdle.crdt.utils;
 
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.Data;
+
 import java.util.Objects;
 
+@Data
+@JsonDeserialize(keyUsing = PairKeyDeserializer.class)
 public class Pair<F, S> {
     private final F first;
     private final S second;

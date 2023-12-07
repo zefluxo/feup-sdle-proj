@@ -13,21 +13,33 @@ public class ORMap {
     private String id = UUID.randomUUID().toString();
     private DotKernel<String> kernel = new DotKernel<>();
     private Map<String, CCounter> map = new HashMap<>();
-    
-    public ORMap() {}
-    public ORMap(String id) { this.id = id; }
+
+    public ORMap() {
+    }
+
+    public ORMap(String id) {
+        this.id = id;
+    }
 
     // for replicating
-    public ORMap(ORMap map) { 
+    public ORMap(ORMap map) {
         this.id = map.id;
         this.kernel = map.kernel;
         this.map = map.map;
     }
 
-    public String id() { return this.id; }
-    public Map<String, CCounter> map() { return this.map; }
-    public DotContext context() { return this.kernel.context(); }
- 
+    public String id() {
+        return this.id;
+    }
+
+    public Map<String, CCounter> map() {
+        return this.map;
+    }
+
+    public DotContext context() {
+        return this.kernel.context();
+    }
+
     public CCounter get(String key) {
 
         if (!map.containsKey(key)) this.put(key, 0);
@@ -36,7 +48,7 @@ public class ORMap {
     }
 
     public void put(String key, Integer value) {
-        
+
         CCounter counter = new CCounter(context());
         counter.inc(value);
         this.kernel.add(this.id, key);
@@ -53,8 +65,13 @@ public class ORMap {
 
     }
 
-    public void inc(String key, Integer value) { this.get(key).inc(value); }
-    public void dec(String key, Integer value) { this.get(key).dec(value); }
+    public void inc(String key, Integer value) {
+        this.get(key).inc(value);
+    }
+
+    public void dec(String key, Integer value) {
+        this.get(key).dec(value);
+    }
 
 
     public void join(ORMap otherMap) {
@@ -62,7 +79,7 @@ public class ORMap {
         Map<String, CCounter> newMap = new HashMap<>();
         this.kernel.join(otherMap.kernel, false);
 
-        for (String key: kernel.values()) {
+        for (String key : kernel.values()) {
 
             CCounter thisValue = this.map.get(key);
             CCounter otherValue = otherMap.map.get(key);
@@ -72,7 +89,7 @@ public class ORMap {
             else {
                 thisValue.join(otherValue);
                 newMap.put(key, thisValue);
-            } 
+            }
 
         }
 
@@ -92,12 +109,12 @@ public class ORMap {
         stringBuilder.append(id + ": (");
 
         for (var entry : this.map.entrySet()) {
-            stringBuilder.append("[" + entry.getKey().toString() + " : " + entry.getValue().toString() + "]");
+            stringBuilder.append("[" + entry.getKey() + " : " + entry.getValue().toString() + "]");
         }
 
         stringBuilder.append(")");
         return stringBuilder.toString();
 
-    } 
-    
+    }
+
 }
