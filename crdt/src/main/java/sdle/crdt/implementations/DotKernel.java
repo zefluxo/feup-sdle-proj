@@ -2,27 +2,49 @@ package sdle.crdt.implementations;
 
 import lombok.Data;
 import sdle.crdt.utils.Pair;
-
-import java.util.HashMap;
 import java.util.Map;
-
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.HashMap;
 
 @Data
-public class DotKernel {
+public class DotKernel<V> {
+    
+    private Map< Pair<String, Integer>, V> dotMap = new HashMap<>();
+    private DotContext context;
 
-    public Map<Pair<String, Integer>, Integer> dotMap = new HashMap<>();
-    public DotContext dotContext = new DotContext();
+    public DotKernel() { this.context = new DotContext(); }
+    public DotKernel(DotContext context) { this.context = context; }
 
-    public DotKernel() {
+    public Map<Pair<String, Integer>, V> map() { return this.dotMap; }
+    public DotContext context() { return this.context; }
+
+    public Set<V> values() {
+
+        return dotMap.entrySet().stream()
+                     .map(Map.Entry::getValue)
+                     .collect(Collectors.toSet());
+
     }
 
-    public DotKernel(DotContext dotContext) {
-        this.dotContext = dotContext;
+    public void add(String id, V value) {
+        Pair<String, Integer> dot = context.makeDot(id);
+        this.dotMap.put(dot, value);
     }
 
-    public void join(DotKernel dotKernel) {
+    public void remove(Pair<String, Integer> key) { this.dotMap.remove(key); }
+    public void remove(V value) {
 
-        if (this == dotKernel) return;
+        var iterator = this.dotMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            V entryValue = iterator.next().getValue();
+            if (entryValue == value) iterator.remove();
+        }
+
+    }
+
+    public void join(DotKernel<V> kernel) { this.join(kernel, true); }
+    public void join(DotKernel<V> kernel, boolean mergeContext) {
 
         var iterator = this.dotMap.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -30,101 +52,31 @@ public class DotKernel {
             var entry = iterator.next();
             Pair<String, Integer> key = entry.getKey();
 
-            boolean keyInOther = dotKernel.dotMap.containsKey(key);
-            boolean otherKnowsKey = dotKernel.dotContext.dotIn(key);
+            boolean keyInOther = kernel.dotMap.containsKey(key);
+            boolean otherKnowsKey = kernel.context.contains(key.getFirst());
 
             if (!keyInOther && otherKnowsKey) iterator.remove();
 
         }
 
-        iterator = dotKernel.dotMap.entrySet().iterator();
+        iterator = kernel.dotMap.entrySet().iterator();
         while (iterator.hasNext()) {
 
             var entry = iterator.next();
             Pair<String, Integer> key = entry.getKey();
-            Integer value = entry.getValue();
+            V value = entry.getValue();
 
-            boolean keyIsHere = this.dotMap.containsKey(key);
-            boolean thisKnowsKey = this.dotContext.dotIn(key);
+            boolean keyInThis = this.dotMap.containsKey(key);
+            boolean thisKnowsKey = this.context.contains(key.getFirst());
 
-            if (!keyIsHere && !thisKnowsKey) this.dotMap.put(key, value);
-
-        }
-
-        dotContext.join(dotKernel.dotContext);
-
-    }
-
-    public DotKernel add(String id, Integer value) {
-
-        DotKernel result = new DotKernel();
-
-        Pair<String, Integer> dot = this.dotContext.makeDot(id);
-        this.dotMap.put(dot, value);
-
-        result.dotMap.put(dot, value);
-        result.dotContext.insertDot(dot, false);
-        return result;
-
-    }
-
-    // remove all dots matching given value
-    public DotKernel remove(Integer value) {
-
-        DotKernel result = new DotKernel();
-
-        var iterator = this.dotMap.entrySet().iterator();
-        while (iterator.hasNext()) {
-
-            var entry = iterator.next();
-            Pair<String, Integer> entryKey = entry.getKey();
-            Integer entryValue = entry.getValue();
-
-            if (entryValue == value) {
-
-                result.dotContext.insertDot(entryKey, false);
-                iterator.remove();
-
-            }
+            if (!keyInThis && !thisKnowsKey) this.dotMap.put(key, value);
 
         }
 
-        result.dotContext.compact();
-        return result;
+        if (mergeContext) context.join(kernel.context);
 
-    }
+    } 
 
-    public DotKernel remove(Pair<String, Integer> dot) {
-
-        DotKernel result = new DotKernel();
-        boolean dotExists = this.dotMap.containsKey(dot);
-
-        if (dotExists) {
-            result.dotContext.insertDot(dot, true);
-            this.dotMap.remove(dot);
-        }
-
-        return result;
-
-    }
-
-    // self-explanatory: remove all dots from dotMap
-    public DotKernel removeAllDots() {
-
-        DotKernel result = new DotKernel();
-
-        var iterator = this.dotMap.entrySet().iterator();
-        while (iterator.hasNext()) {
-
-            var entry = iterator.next();
-            result.dotContext.insertDot(entry.getKey(), false);
-
-        }
-
-        result.dotContext.compact();
-        this.dotMap.clear();
-        return result;
-
-    }
+    public void reset() { this.dotMap.clear(); }
 
 }

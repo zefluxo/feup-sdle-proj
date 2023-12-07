@@ -1,97 +1,66 @@
 package sdle.crdt.implementations;
 
+import java.util.UUID;
+
 import lombok.Data;
 import sdle.crdt.utils.Pair;
 
 @Data
 public class CCounter {
 
-    private String id = "defaultCCounter";
-    private DotKernel dotKernel = new DotKernel();
+    private String id = UUID.randomUUID().toString();
+    public DotKernel<Integer> dotKernel = new DotKernel<>();
 
-    public CCounter() {
-    }
-
-    public CCounter(String id) {
+    public CCounter() {}
+    public CCounter(String id) { this.id = id; }
+    public CCounter(DotContext context) { this.dotKernel = new DotKernel<>(context); }
+    public CCounter(String id, DotContext context) {
         this.id = id;
+        this.dotKernel = new DotKernel<Integer>(context);
     }
 
-    public CCounter(String id, DotKernel dotKernel) {
-        this.id = id;
-        this.dotKernel = dotKernel;
-    }
+    public DotContext context() { return this.dotKernel.context(); }
 
-    public DotContext context() {
-        return this.dotKernel.dotContext;
-    }
+    public void inc(Integer value) {
 
-    public CCounter inc(Integer value) {
-
-        CCounter result = new CCounter();
         Integer base = 0;
+        for (Pair<String, Integer> key : this.dotKernel.map().keySet()) {
 
-        for (Pair<String, Integer> key : this.dotKernel.dotMap.keySet()) {
-
-            Integer currValue = this.dotKernel.dotMap.get(key);
-
+            Integer currValue = this.dotKernel.map().get(key);
             if (key.getFirst() == this.id) {
                 base = Math.max(base, currValue);
-                result.dotKernel.join(this.dotKernel.remove(key));
+                this.dotKernel.remove(key);
+                break;
             }
-
+            
         }
-
-        result.dotKernel.join(this.dotKernel.add(id, base + value));
-        return result;
-
+        
+        this.dotKernel.add(id, base + value);
+        
     }
 
-    public CCounter dec(Integer value) {
-
-        CCounter result = new CCounter();
-        Integer base = 0;
-
-        for (Pair<String, Integer> key : this.dotKernel.dotMap.keySet()) {
-
-            Integer currValue = this.dotKernel.dotMap.get(key);
-
-            if (key.getFirst() == this.id) {
-                base = Math.max(base, currValue);
-                result.dotKernel.join(this.dotKernel.remove(key));
-            }
-
-        }
-
-        Integer newValue = Math.max(base - value, 0);
-        result.dotKernel.join(this.dotKernel.add(id, newValue));
-        return result;
-
-    }
+    public void dec(Integer value) { this.inc(-value); }
 
     public Integer read() {
 
         Integer result = 0;
 
-        for (Pair<String, Integer> key : this.dotKernel.dotMap.keySet()) {
-
-            Integer value = this.dotKernel.dotMap.get(key);
+        for (Pair<String, Integer> key : this.dotKernel.map().keySet()) {
+            System.out.println(key + " : " + this.dotKernel.map().get(key));
+            Integer value = this.dotKernel.map().get(key);
             result += value;
-
         }
 
         return result;
 
     }
 
-    public void join(CCounter counter) {
-        this.dotKernel.join(counter.dotKernel);
-    }
+    public void join(CCounter counter) { this.dotKernel.join(counter.dotKernel); }
+    public void reset() { this.dotKernel.reset(); }
 
-    public CCounter reset() {
-        CCounter result = new CCounter();
-        result.dotKernel = this.dotKernel.removeAllDots();
-        return result;
-    }
+    @Override
+    public String toString() { return this.read().toString(); }
+
 
 }
 

@@ -4,114 +4,85 @@ import lombok.Data;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 // Implementation only allows for mapping Strings to CCounters
 @Data
 public class ORMap {
 
-    private String id = "defaultORMap";
+    private String id = UUID.randomUUID().toString();
+    private DotKernel<String> kernel = new DotKernel<>();
     private Map<String, CCounter> map = new HashMap<>();
-    private DotContext dotContext = new DotContext();
+    
+    public ORMap() {}
+    public ORMap(String id) { this.id = id; }
 
-    public ORMap() {
+    // for replicating
+    public ORMap(ORMap map) { 
+        this.id = map.id;
+        this.kernel = map.kernel;
+        this.map = map.map;
     }
 
-    public ORMap(String id) {
-        this.id = id;
-    }
-
-    public ORMap(ORMap orMap) {
-        this.dotContext = orMap.context();
-        this.map = orMap.map();
-    }
-
-    public Map<String, CCounter> map() {
-        return this.map;
-    }
-
-    public DotContext context() {
-        return this.dotContext;
-    }
-
+    public String id() { return this.id; }
+    public Map<String, CCounter> map() { return this.map; }
+    public DotContext context() { return this.kernel.context(); }
+ 
     public CCounter get(String key) {
 
-        if (map.containsKey(key)) return map.get(key);
-
-        CCounter newCounter = new CCounter();
-        map.put(key, newCounter);
-        return newCounter;
+        if (!map.containsKey(key)) this.put(key, 0);
+        return this.map.get(key);
 
     }
 
-    public void put(String key, CCounter item) {
-        this.map.put(key, item);
-    }
-
-    public ORMap remove(String key) {
-
-        ORMap result = new ORMap();
-
-        if (map.containsKey(key)) {
-            CCounter counter = new CCounter();
-            counter = map.get(key).reset();
-            result.dotContext = counter.context();
-            map.remove(key);
-        }
-
-        return result;
+    public void put(String key, Integer value) {
+        
+        CCounter counter = new CCounter(context());
+        counter.inc(value);
+        this.kernel.add(this.id, key);
+        this.map.put(key, counter);
 
     }
 
-    public ORMap reset() {
+    public void remove(String key) {
 
-        ORMap result = new ORMap();
+        if (!this.map.containsKey(key)) return;
 
-        if (!this.map.isEmpty()) {
-
-            for (var entry : this.map.entrySet()) {
-                CCounter counter = entry.getValue().reset();
-                result.dotContext.join(counter.context());
-            }
-
-            this.map.clear();
-
-        }
-
-        return result;
+        this.kernel.remove(key);
+        this.map.remove(key);
 
     }
+
+    public void inc(String key, Integer value) { this.get(key).inc(value); }
+    public void dec(String key, Integer value) { this.get(key).dec(value); }
+
 
     public void join(ORMap otherMap) {
 
-        DotContext context = this.dotContext;
+        Map<String, CCounter> newMap = new HashMap<>();
+        this.kernel.join(otherMap.kernel, false);
 
-        for (var entry : this.map.entrySet()) {
+        for (String key: kernel.values()) {
 
-            String key = entry.getKey();
-            CCounter value = entry.getValue();
+            CCounter thisValue = this.map.get(key);
+            CCounter otherValue = otherMap.map.get(key);
 
-            if (!otherMap.map().containsKey(key)) {
-
-                CCounter empty = new CCounter(this.id, new DotKernel(otherMap.context()));
-                value.join(empty);
-                this.dotContext = context;
-
-            }
-
-        }
-
-        for (var entry : otherMap.map().entrySet()) {
-
-            String key = entry.getKey();
-            CCounter value = entry.getValue();
-
-            this.get(key).join(value);
-            this.dotContext = context;
+            if (thisValue == null) newMap.put(key, otherValue);
+            else if (otherValue == null) newMap.put(key, thisValue);
+            else {
+                thisValue.join(otherValue);
+                newMap.put(key, thisValue);
+            } 
 
         }
 
-        this.dotContext.join(otherMap.context());
+        this.map = newMap;
 
+    }
+
+    public void reset() {
+        this.kernel.reset();
+        this.map.clear();
     }
 
     @Override
@@ -121,12 +92,12 @@ public class ORMap {
         stringBuilder.append(id + ": (");
 
         for (var entry : this.map.entrySet()) {
-            stringBuilder.append("[" + entry.getKey() + " : " + entry.getValue().read() + "]");
+            stringBuilder.append("[" + entry.getKey().toString() + " : " + entry.getValue().toString() + "]");
         }
 
         stringBuilder.append(")");
         return stringBuilder.toString();
 
-    }
-
+    } 
+    
 }
