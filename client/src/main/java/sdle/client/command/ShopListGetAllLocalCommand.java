@@ -11,5 +11,6 @@ public class ShopListGetAllLocalCommand extends BaseShoppListCommand implements 
         System.out.println("Listing all local shopping lists");
         localStorage.getLocalShoppLists().forEach((hashId, shoppList) ->
                 System.out.printf("List: %s %s%n", hashId, shoppList.getMap()));
+
     }
 }

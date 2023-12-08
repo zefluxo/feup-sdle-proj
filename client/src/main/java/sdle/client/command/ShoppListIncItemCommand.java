@@ -17,10 +17,6 @@ public class ShoppListIncItemCommand extends BaseShoppListCommand implements Run
     @Override
     public void run() {
         System.out.printf("Inc item to a shopping list: (hashId=%s, name=%s, quantity=%s%n", hashId, name, quantity);
-        localStorage.getLocalShoppLists().get(hashId).inc(name, Integer.valueOf(quantity));
-        localStorage.writeOnDisk(hashId);
-        boolean success = restAdapter.incItem(hashId, name, quantity);
-        //if (!success) System.out.printf("Hash ID from new list: %s%n", shoppList.getMap());
-
+        localStorage.incItem(hashId, name, quantity);
     }
 }

@@ -16,10 +16,10 @@ import sdle.client.command.*;
         }
 
 )
-public class ClientRestCommad implements Runnable {
+public class ClientApp implements Runnable {
 
     public static void main(String[] args) {
-        int exitCode = new CommandLine(new ClientRestCommad()).execute(args);
+        int exitCode = new CommandLine(new ClientApp()).execute(args);
         System.exit(exitCode);
     }
 
