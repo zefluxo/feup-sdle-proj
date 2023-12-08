@@ -11,10 +11,14 @@ import io.vertx.ext.web.client.WebClientOptions;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import picocli.CommandLine;
 import sdle.crdt.implementations.ORMap;
 
+import java.io.File;
+import java.nio.file.Paths;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static sdle.client.ClientRest.sendSync;
+import static sdle.client.CloudRestAdapter.sendSync;
 
 public class ClientRestTestIT {
 
@@ -24,29 +28,74 @@ public class ClientRestTestIT {
     static WebClient restClient;
     static ObjectMapper mapper;
 
+    static String hashId;
+
     @BeforeAll
     static void setup() {
         mapper = new ObjectMapper();
         restClient = WebClient.create(Vertx.vertx(), new WebClientOptions().setProtocolVersion(HttpVersion.HTTP_1_1).setDefaultPort(7788).setConnectTimeout(2000));
+        File dataDir = Paths.get("target", "data").toFile();
+        dataDir.mkdirs();
+        String[] entries = dataDir.list();
+        for (String s : entries) {
+            File currentFile = new File(dataDir.getPath(), s);
+            currentFile.delete();
+        }
+        System.setProperty("user.dir", "target");
+        assert 0 == new CommandLine(new ClientRestCommad()).execute("new");
+        hashId = dataDir.list()[0];
     }
 
     @SneakyThrows
     @Test
-    public void test1() {
+    public void testNoArgsCommand() {
+        assert 0 == new CommandLine(new ClientRestCommad()).execute();
+    }
+
+    @SneakyThrows
+    @Test
+    public void testNewList() {
+        assert 0 == new CommandLine(new ClientRestCommad()).execute("new");
+    }
+
+    @SneakyThrows
+    @Test
+    public void testGetList() {
+        assert 0 == new CommandLine(new ClientRestCommad()).execute("getList", "-id=" + hashId);
+    }
+
+    @SneakyThrows
+    @Test
+    public void testIncItem() {
+        assert 0 == new CommandLine(new ClientRestCommad()).execute("incItem", "-id=" + hashId, "-n=" + KEY_ARROZ, "-q=10");
+    }
+
+    @SneakyThrows
+    @Test
+    public void testDecItem() {
+        assert 0 == new CommandLine(new ClientRestCommad()).execute("decItem", "-id=" + hashId, "-n=" + KEY_FEIJAO, "-q=1");
+    }
+
+    @SneakyThrows
+    @Test
+    public void testListAll() {
+        assert 0 == new CommandLine(new ClientRestCommad()).execute("all");
+    }
+
+    @SneakyThrows
+    @Test
+    public void integrationTestUsingCommands() {
         System.out.println("Initializing integration test");
 
         ORMap shoppList = new ORMap();
         shoppList.inc(KEY_ARROZ, 1);
         assertEquals(1, shoppList.get(KEY_ARROZ).read());
 
+        CommandLine commandLine = new CommandLine(new ClientRestCommad());
+        commandLine.execute("incItem", "-id=" + hashId, "-n=" + KEY_ARROZ, "-q=2");
+        commandLine.execute("decItem", "-id=" + hashId, "-n=" + KEY_ARROZ, "-q=1");
 
-        HttpResponse<Buffer> response = sendSync(restClient, SERVER_ADDR, HttpMethod.PUT, "/api/shopp/list", null, 1);
-        String newShoppListHash = response.bodyAsString();
-        sendSync(restClient, SERVER_ADDR, HttpMethod.POST, String.format("/api/shopp/list/%s/inc/%s/%s", newShoppListHash, KEY_ARROZ, 2), null, 3);
-        sendSync(restClient, SERVER_ADDR, HttpMethod.POST, String.format("/api/shopp/list/%s/dec/%s/%s", newShoppListHash, KEY_ARROZ, 1), null, 3);
-        //System.out.println(newShoppListHash);
-        response = sendSync(restClient, SERVER_ADDR, HttpMethod.GET, String.format("/api/shopp/list/%s", newShoppListHash), null, 2);
-        ORMap serializedShoppList = mapper.readValue(response.bodyAsString(), ORMap.class);
+        ORMap serializedShoppList = new LocalStorage().getLocalShoppLists().get(hashId);
         System.out.println(serializedShoppList);
 
         assertEquals(1, serializedShoppList.get(KEY_ARROZ).read());
@@ -73,6 +122,49 @@ public class ClientRestTestIT {
     }
 
     @SneakyThrows
+    @Test
+    public void integrationTestUsingRestOnly() {
+        System.out.println("Initializing integration test");
+
+        ORMap shoppList = new ORMap();
+        shoppList.inc(KEY_ARROZ, 1);
+        assertEquals(1, shoppList.get(KEY_ARROZ).read());
+
+
+        HttpResponse<Buffer> response = sendSync(restClient, SERVER_ADDR, HttpMethod.PUT, "/api/shopp/list", null);
+        String newShoppListHash = response.bodyAsString();
+        sendSync(restClient, SERVER_ADDR, HttpMethod.POST, String.format("/api/shopp/list/%s/inc/%s/%s", newShoppListHash, KEY_ARROZ, 2), null);
+        sendSync(restClient, SERVER_ADDR, HttpMethod.POST, String.format("/api/shopp/list/%s/dec/%s/%s", newShoppListHash, KEY_ARROZ, 1), null);
+        //System.out.println(newShoppListHash);
+        response = sendSync(restClient, SERVER_ADDR, HttpMethod.GET, String.format("/api/shopp/list/%s", newShoppListHash), null);
+        ORMap serializedShoppList = mapper.readValue(response.bodyAsString(), ORMap.class);
+        System.out.println(serializedShoppList);
+
+        assertEquals(1, serializedShoppList.get(KEY_ARROZ).read());
+        assertEquals(1, serializedShoppList.getMap().size());
+
+        shoppList.join(serializedShoppList);
+        assertEquals(2, shoppList.get(KEY_ARROZ).read());
+        assertEquals(1, shoppList.getMap().size());
+
+
+        ORMap shoppList2 = new ORMap("shoppList2");
+        shoppList2.inc(KEY_ARROZ, 10);
+        shoppList2.dec(KEY_ARROZ, 1);
+        shoppList2.dec(KEY_ARROZ, 1);
+        shoppList2.inc(KEY_ARROZ, 2);
+
+        System.out.println(shoppList);
+        shoppList.join(shoppList2);
+        System.out.println(shoppList);
+
+        assertEquals(12, shoppList.get(KEY_ARROZ).read());
+        assertEquals(1, shoppList.getMap().size());
+
+    }
+
+
+    @SneakyThrows
     //@Test
     public void test2() {
         System.out.println("Initializing integration test");
@@ -84,12 +176,12 @@ public class ClientRestTestIT {
         assertEquals(1, shoppList.get(KEY_FEIJAO).read());
 
 
-        HttpResponse<Buffer> response = sendSync(restClient, SERVER_ADDR, HttpMethod.PUT, "/api/shopp/list", null, 1);
+        HttpResponse<Buffer> response = sendSync(restClient, SERVER_ADDR, HttpMethod.PUT, "/api/shopp/list", null);
         String newShoppListHash = response.bodyAsString();
-        sendSync(restClient, SERVER_ADDR, HttpMethod.POST, String.format("/api/shopp/list/%s/inc/%s/%s", newShoppListHash, KEY_ARROZ, 2), null, 3);
-        sendSync(restClient, SERVER_ADDR, HttpMethod.POST, String.format("/api/shopp/list/%s/inc/%s/%s", newShoppListHash, KEY_FEIJAO, 1), null, 3);
+        sendSync(restClient, SERVER_ADDR, HttpMethod.POST, String.format("/api/shopp/list/%s/inc/%s/%s", newShoppListHash, KEY_ARROZ, 2), null);
+        sendSync(restClient, SERVER_ADDR, HttpMethod.POST, String.format("/api/shopp/list/%s/inc/%s/%s", newShoppListHash, KEY_FEIJAO, 1), null);
         //System.out.println(newShoppListHash);
-        response = sendSync(restClient, SERVER_ADDR, HttpMethod.GET, String.format("/api/shopp/list/%s", newShoppListHash), null, 2);
+        response = sendSync(restClient, SERVER_ADDR, HttpMethod.GET, String.format("/api/shopp/list/%s", newShoppListHash), null);
         ORMap serializedShoppList = mapper.readValue(response.bodyAsString(), ORMap.class);
         System.out.println(serializedShoppList);
 

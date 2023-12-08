@@ -28,12 +28,23 @@ cd client
 ./run.sh
 ```
 
-### Client command line examples (# only with ZeroMQ version of cloud)
+### Client command line examples
 
-```
-java -jar target/client-1.0-SNAPSHOT.one-jar.jar tcp://127.0.0.1:7788 putList
-java -jar target/client-1.0-SNAPSHOT.one-jar.jar tcp://127.0.0.1:7788 getList
-java -jar target/client-1.0-SNAPSHOT.one-jar.jar tcp://127.0.0.1:7788 putItem <listHash> <itemName> <quantity>
+``` 
+mvn clean package
+
+# criar nova lista
+java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar new  
+
+# adicionar/incrementar novo item 
+java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar incItem -id 9CF0689CE73223EFE490A5089A04BFE4 -n=arroz -q=2 
+
+# diminuir quatidade de um determinado item (em caso do resultado fosse negativo, fica 0) 
+java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar decItem -id 9CF0689CE73223EFE490A5089A04BFE4 -n=arroz -q=1 
+
+# lista todos as listas (as listas ficam localmente gravadas na pasta "data")
+java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar all 
+
 ```
 
 ### KNOW ISSUES
