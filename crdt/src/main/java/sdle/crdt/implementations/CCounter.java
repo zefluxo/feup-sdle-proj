@@ -46,7 +46,7 @@ public class CCounter {
         Integer result = 0;
 
         for (Pair<String, Integer> key : this.dotKernel.map().keySet()) {
-            System.out.println(key + " : " + this.dotKernel.map().get(key));
+            //System.out.println(key + " : " + this.dotKernel.map().get(key));
             Integer value = this.dotKernel.map().get(key);
             result += value;
         }

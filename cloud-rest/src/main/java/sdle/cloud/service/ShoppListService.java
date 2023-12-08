@@ -1,6 +1,9 @@
 package sdle.cloud.service;
 
 import io.quarkus.runtime.StartupEvent;
+import io.vertx.core.Future;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.ext.web.client.HttpResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -13,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 @ApplicationScoped
 public class ShoppListService extends BaseService {
@@ -33,19 +37,20 @@ public class ShoppListService extends BaseService {
 
 
     @SneakyThrows
-    public String processPutList(String listHashId, ORMap shoppList) {
-        System.out.printf("PUT LIST process %s, %s %n", listHashId, shoppList);
+    public String processPutList(String hashId, ORMap shoppList) {
+        System.out.printf("PUT LIST process %s, %s %n", hashId, shoppList);
 
-        String ownerIp = getListOwner(cluster, node, listHashId);
-        System.out.printf("%s, %s, %s, %s %n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()), shoppList);
+        String ownerIp = getListOwner(cluster, node, hashId);
+        //System.out.printf("%s, %s, %s, %s %n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()), shoppList);
         if (ownerIp.equals(node.getIp())) {
-            cluster.getShoppLists().put(listHashId, shoppList);
-            cluster.getReplicateShoppLists().remove(listHashId);
+            cluster.getShoppLists().putIfAbsent(hashId, new ORMap());
+            cluster.getShoppLists().get(hashId).join(shoppList);
+            cluster.getReplicateShoppLists().remove(hashId);
 
-            sendReplicateList(listHashId, shoppList);
+            sendReplicateList(hashId, shoppList);
             System.out.println(cluster.getShoppLists());
         } else {
-            String url = String.format("/api/shopp/list/%s", listHashId);
+            String url = String.format("/api/shopp/list/%s", hashId);
             if (shoppList.getMap().isEmpty()) {
                 return restClient.put(ownerIp, url).send()
                         .toCompletionStage().toCompletableFuture().get().bodyAsString();
@@ -54,8 +59,8 @@ public class ShoppListService extends BaseService {
                         .toCompletionStage().toCompletableFuture().get().bodyAsString();
             }
         }
-        System.out.printf("Returning : %s%n", listHashId);
-        return listHashId;
+        System.out.printf("Returning : %s%n", hashId);
+        return hashId;
     }
 
 
@@ -99,7 +104,7 @@ public class ShoppListService extends BaseService {
                     shoppList.dec(name, quantity);
                 }
                 sendReplicateList(listHashId, shoppList);
-                System.out.println(cluster.getShoppLists());
+                //System.out.println(cluster.getShoppLists());
                 reply = REPLY_OK;
             }
         } else {
@@ -113,10 +118,17 @@ public class ShoppListService extends BaseService {
     protected void sendReplicateList(String listHashId, ORMap shoppList) {
         List<String> replicaHashes = getReplicateHashes();
         System.out.println(listHashId + " Will be replicate to " + replicaHashes);
-        replicaHashes.forEach(hash -> restClient.post(cluster.getNodeHashes().get(hash), String.format("/api/shopp/replicate/%s", listHashId))
-                .sendJson(shoppList)
-                .onFailure(Throwable::printStackTrace)
-                .onSuccess(r -> System.out.println(listHashId + " replicated to " + cluster.getNodeHashes().get(hash))));
+        final List<Future<HttpResponse<Buffer>>> futures = new ArrayList<>();
+        replicaHashes.forEach(hash -> futures.add(restClient.post(cluster.getNodeHashes().get(hash),
+                        String.format("/api/shopp/replicate/%s", listHashId))
+                .sendJson(shoppList)));
+        futures.forEach(f -> {
+            try {
+                f.toCompletionStage().toCompletableFuture().get();
+            } catch (InterruptedException | ExecutionException e) {
+                System.out.println("Error on replication : " + e.getMessage());
+            }
+        });
     }
 
     protected List<String> getReplicateHashes() {
@@ -141,15 +153,15 @@ public class ShoppListService extends BaseService {
     }
 
     @SneakyThrows
-    public String processReplicateList(String listHashId, ORMap shoppList) {
-        System.out.printf("REPLICATE LIST process %s %s%n", listHashId, shoppList);
+    public String processReplicateList(String hashId, ORMap shoppList) {
+        System.out.printf("REPLICATE LIST process %s: %s%n", hashId, shoppList.getMap());
         if (node.isMaintenance()) {
-            String url = String.format("/api/shopp/replicate/%s", listHashId);
+            String url = String.format("/api/shopp/replicate/%s", hashId);
             return restClient.post((String) cluster.getNodes().values().stream().findFirst().get(), url)
                     .sendJson(shoppList).toCompletionStage().toCompletableFuture().get().bodyAsString();
         } else {
-            cluster.getReplicateShoppLists().put(listHashId, shoppList);
+            cluster.getReplicateShoppLists().put(hashId, shoppList);
         }
-        return listHashId;
+        return hashId;
     }
 }

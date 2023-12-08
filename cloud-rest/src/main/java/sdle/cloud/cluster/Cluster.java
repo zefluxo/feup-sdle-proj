@@ -45,9 +45,18 @@ public class Cluster {
     }
 
     public void printStatus(Node node) {
-        System.out.printf("[%s, %s] Nodes:          %s%n", node.getHashId(), node.getIp(), nodes);
+        //System.out.printf("[%s, %s] Nodes:          %s%n", node.getHashId(), node.getIp(), nodes);
         System.out.printf("[%s, %s] Node hashes:      %s%n", node.getHashId(), node.getIp(), nodeHashes);
-        System.out.printf("[%s, %s] Shopping Lists: %s%n", node.getHashId(), node.getIp(), shoppLists);
-        System.out.printf("[%s, %s] Replicate Shopping Lists: %s%n", node.getHashId(), node.getIp(), replicateShoppLists);
+        System.out.printf("[%s, %s] Shopping Lists: %n", node.getHashId(), node.getIp());
+        printShoppList(shoppLists);
+        System.out.printf("[%s, %s] Replicate Shopping Lists: %n", node.getHashId(), node.getIp());
+        printShoppList(replicateShoppLists);
+    }
+
+    private void printShoppList(Map<String, ORMap> shoppLists) {
+        if (shoppLists.isEmpty()) return;
+        StringBuilder result = new StringBuilder();
+        shoppLists.forEach((hash, shoppList) -> result.append(String.format("    %s: %s%n", hash, shoppList.getMap())));
+        System.out.println(result);
     }
 }
