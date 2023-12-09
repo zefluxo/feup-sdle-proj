@@ -15,13 +15,11 @@ services:
 
   cloud-node-1:
     extends:
-      file: common.yaml
+      file: common-complete.yaml
       service: cloud-node
     networks:
       cloud-network:
         ipv4_address: 10.5.0.11
-    volumes:
-      - ../../../data/cloud-node-1:/deployments/data
 
   cloud-node-2:
     depends_on:
@@ -32,8 +30,6 @@ services:
     networks:
       cloud-network:
         ipv4_address: 10.5.0.12
-    volumes:
-      - ../../../data/cloud-node-2:/deployments/data
 
   cloud-node-3:
     depends_on:
@@ -44,8 +40,16 @@ services:
     networks:
       cloud-network:
         ipv4_address: 10.5.0.13
-    volumes:
-      - ../../../data/cloud-node-3:/deployments/data
+
+  cloud-node-others:
+    depends_on:
+      - cloud-node-3
+    extends:
+      file: common.yaml
+      service: cloud-node
+    scale: 5
+    networks:
+      - cloud-network
 
 networks:
   cloud-network:

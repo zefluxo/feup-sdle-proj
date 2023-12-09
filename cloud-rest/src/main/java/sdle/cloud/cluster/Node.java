@@ -1,5 +1,6 @@
 package sdle.cloud.cluster;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.runtime.ShutdownEvent;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.event.Observes;
@@ -19,9 +20,11 @@ import java.util.Random;
 public class Node {
 
     @Inject
+    @JsonIgnore
     NodeConfiguration config;
 
     @Inject
+    @JsonIgnore
     FileUtils fileUtils;
 
     String id;
@@ -40,19 +43,15 @@ public class Node {
 
     @PostConstruct
     void onStart() throws UnknownHostException {
+        hostname = Inet4Address.getLocalHost().getHostName();
+        ip = Inet4Address.getLocalHost().getHostAddress();
+        port = config.getNodePort();
+
         try {
             Node node = fileUtils.readNode();
-            hostname = node.getHostname();
-            ip = node.getIp();
-            port = node.getPort();
             id = node.getId();
             hashId = node.getHashId();
-            maintenance = false;
-            initializing = true;
         } catch (Exception ex) {
-            hostname = Inet4Address.getLocalHost().getHostName();
-            ip = Inet4Address.getLocalHost().getHostAddress();
-            port = config.getNodePort();
             id = config.getNodeId();
             if ("node".equals(id)) {
                 id = "node" + new Random().nextInt();

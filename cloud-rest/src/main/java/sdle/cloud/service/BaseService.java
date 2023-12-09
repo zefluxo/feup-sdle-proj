@@ -13,7 +13,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 public abstract class BaseService {
-    public static final int REPLICATE_FACTOR = 3;
+    public static final int REPLICATE_FACTOR = 2;
     public static final String REPLY_OK = "OK";
 
     WebClient restClient;

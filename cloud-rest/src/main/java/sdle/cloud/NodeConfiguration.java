@@ -22,4 +22,9 @@ public interface NodeConfiguration {
     @WithName("port")
     @WithDefault("7788")
     Integer getNodePort();
+
+    @WithName("dataDir")
+    @WithDefault("data")
+    String getDataDir();
+
 }

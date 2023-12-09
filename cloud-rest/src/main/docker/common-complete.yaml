@@ -1,0 +1,10 @@
+services:
+
+  cloud-node:
+    image: cloud-node
+    labels:
+      - "traefik.tcp.routers.cloud-node.rule=HostSNI(`*`) || HostSNI(`*`) && ClientIP(`0.0.0.0`)"
+      - "traefik.tcp.routers.cloud-node.tls=false"
+      - "traefik.tcp.services.cloud-node.loadbalancer.server.port=7788"
+      - "traefik.tcp.routers.cloud-node.entrypoints=tcpep"
+    env_file: .env-complete

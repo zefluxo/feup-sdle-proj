@@ -1,10 +1,11 @@
 package sdle.cloud.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.quarkus.runtime.StartupEvent;
-import jakarta.enterprise.event.Observes;
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.SneakyThrows;
+import sdle.cloud.NodeConfiguration;
 import sdle.cloud.cluster.Node;
 import sdle.crdt.implementations.ORMap;
 
@@ -18,25 +19,40 @@ import java.util.stream.Stream;
 @Singleton
 public class FileUtils {
 
-    private static final Path DATA_DIR = Paths.get(System.getProperty("sdle.cloud.dataDir", "data"));
+    @Inject
+    public NodeConfiguration nodeConfiguration;
 
-    private static final Path SHOPP_LISTS_DIR = Paths.get(DATA_DIR.toString(), "shoppLists");
-    private static final Path REPLICATE_SHOPP_LISTS_DIR = Paths.get(DATA_DIR.toString(), "replicateShoppLists");
+    private Path shoppListsDir;
+    private Path replicateShoppListsDir;
+    private Path nodePath;
+    //private static final Path DATA_DIR = Paths.get(System.getProperty("sdle.cloud.dataDir", "data"));
+//
+//    private static final Path SHOPP_LISTS_DIR = Paths.get(DATA_DIR.toString(), "shoppLists");
+//    private static final Path REPLICATE_SHOPP_LISTS_DIR = Paths.get(DATA_DIR.toString(), "replicateShoppLists");
+//
+//    private static final Path NODE_PATH = Paths.get(DATA_DIR.toString(), "node");
 
-    private static final Path NODE_PATH = Paths.get(DATA_DIR.toString(), "node");
+    public FileUtils() {
+        //
+    }
+
+    @PostConstruct
+    public void onStart() {
+        shoppListsDir = Paths.get(nodeConfiguration.getDataDir(), "shoppLists");
+        replicateShoppListsDir = Paths.get(nodeConfiguration.getDataDir(), "replicateShoppLists");
+        nodePath = Paths.get(nodeConfiguration.getDataDir(), "node");
+        System.out.printf("Creating data dirs (post-construct): %s%n%s, %s%n",
+                nodeConfiguration.getDataDir(),
+                shoppListsDir.toFile().mkdirs(),
+                replicateShoppListsDir.toFile().mkdirs());
+    }
 
     public Map<String, ORMap> readShoppLists() {
-        return readLists(SHOPP_LISTS_DIR);
+        return readLists(shoppListsDir);
     }
 
     public Map<String, ORMap> readReplicateShoppLists() {
-        return readLists(REPLICATE_SHOPP_LISTS_DIR);
-    }
-
-    void onStart(@Observes StartupEvent ev) {
-        DATA_DIR.toFile().mkdirs();
-        SHOPP_LISTS_DIR.toFile().mkdirs();
-        REPLICATE_SHOPP_LISTS_DIR.toFile().mkdirs();
+        return readLists(replicateShoppListsDir);
     }
 
     @SneakyThrows
@@ -45,18 +61,18 @@ public class FileUtils {
         try (Stream<Path> pathsStream = Files.walk(dir, 1)
                 .filter(Files::isRegularFile).onClose(() -> System.out.println("The Stream is closed"))) {
             for (Path path : pathsStream.toList()) {
-                shoppLists.put(path.getFileName().toString(), new ObjectMapper().readValue(new String(Files.readAllBytes(path)), ORMap.class));
+                shoppLists.put(path.getFileName().toString(), new ObjectMapper().readValue(Files.readString(path), ORMap.class));
             }
         }
         return shoppLists;
     }
 
     public void writeShoppList(String hashId, ORMap shoppList) {
-        writeList(SHOPP_LISTS_DIR, hashId, shoppList);
+        writeList(shoppListsDir, hashId, shoppList);
     }
 
     public void writeReplicateShoppList(String hashId, ORMap shoppList) {
-        writeList(REPLICATE_SHOPP_LISTS_DIR, hashId, shoppList);
+        writeList(shoppListsDir, hashId, shoppList);
     }
 
     @SneakyThrows
@@ -66,11 +82,11 @@ public class FileUtils {
 
     @SneakyThrows
     public Node readNode() {
-        return new ObjectMapper().readValue(new String(Files.readAllBytes(NODE_PATH)), Node.class);
+        return new ObjectMapper().readValue(Files.readString(nodePath), Node.class);
     }
 
     @SneakyThrows
     public void writeNode(Node node) {
-        new ObjectMapper().writer().writeValue(NODE_PATH.toFile(), node);
+        new ObjectMapper().writer().writeValue(nodePath.toFile(), node);
     }
 }

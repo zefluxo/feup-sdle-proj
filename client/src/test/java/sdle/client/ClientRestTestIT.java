@@ -28,6 +28,7 @@ public class ClientRestTestIT {
     public static final String SERVER_ADDR = System.getenv().getOrDefault("sdle.client.serverAddr", "localhost");
     public static final String KEY_FEIJAO = "feijao";
     public static final String KEY_ARROZ = "arroz";
+    public static final String USER_DIR_PROPERTY = "user.dir";
     static WebClient restClient;
     static ObjectMapper mapper;
 
@@ -43,7 +44,7 @@ public class ClientRestTestIT {
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @BeforeEach
     void setup() {
-        oldUserDir = System.getProperty("user.dir");
+        oldUserDir = System.getProperty(USER_DIR_PROPERTY);
         mapper = new ObjectMapper();
         restClient = WebClient.create(Vertx.vertx(), new WebClientOptions().setProtocolVersion(HttpVersion.HTTP_1_1).setDefaultPort(7788).setConnectTimeout(2000));
         File dataDir = Paths.get("target", "data").toFile();

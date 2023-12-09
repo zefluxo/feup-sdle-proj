@@ -1,7 +1,7 @@
 package sdle.cloud.cluster;
 
 import io.quarkus.runtime.ShutdownEvent;
-import io.quarkus.runtime.StartupEvent;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -34,12 +34,11 @@ public class Cluster {
         //
     }
 
-    void onStart(@Observes StartupEvent ev) {
+    @PostConstruct
+    void onStart() {
         System.out.println("Cluster startup");
         shoppLists = fileUtils.readShoppLists();
         replicateShoppLists = fileUtils.readReplicateShoppLists();
-//        nodes = new ConcurrentHashMap<>();
-//        nodeHashes = new TreeMap<>();
     }
 
     void onStop(@Observes ShutdownEvent ev) {
@@ -64,7 +63,7 @@ public class Cluster {
 
     public void writeListsOnDisk() {
         shoppLists.forEach((k, v) -> fileUtils.writeShoppList(k, v));
-        replicateShoppLists.forEach((k, v) -> fileUtils.writeShoppList(k, v));
+        replicateShoppLists.forEach((k, v) -> fileUtils.writeReplicateShoppList(k, v));
     }
 
     private void printShoppList(Map<String, ORMap> shoppLists) {
