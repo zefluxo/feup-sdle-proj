@@ -32,7 +32,8 @@ public class RestAdapter {
             }
         } catch (InterruptedException | ExecutionException e) {
             return Optional.empty();
-        }//System.out.printf("status=%s : response: %s%n", response.statusCode(), response.bodyAsString());
+        }
+        //System.out.printf("status=%s : response: %s%n", response.statusCode(), response.bodyAsString());
         return Optional.ofNullable(response);
     }
 

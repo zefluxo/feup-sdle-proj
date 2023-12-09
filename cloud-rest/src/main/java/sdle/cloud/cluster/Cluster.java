@@ -1,9 +1,12 @@
 package sdle.cloud.cluster;
 
+import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import lombok.Data;
+import sdle.cloud.utils.FileUtils;
 import sdle.cloud.utils.HashUtils;
 import sdle.crdt.implementations.ORMap;
 
@@ -16,14 +19,16 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Cluster {
 
     // TODO: a ideia eh depois usar aqui um "CRDMap", simplificando a questao da concorrencia
-    Map<String, ORMap> shoppLists = new ConcurrentHashMap<>();
-    Map<String, ORMap> replicateShoppLists = new ConcurrentHashMap<>();
+    Map<String, ORMap> shoppLists; // = new ConcurrentHashMap<>();
+    Map<String, ORMap> replicateShoppLists;// = new ConcurrentHashMap<>();
 
     Map<String, Object> nodes = new ConcurrentHashMap<>();
     TreeMap<String, String> nodeHashes = new TreeMap<>();
 
     int nextBootstrapHost = 0;
 
+    @Inject
+    FileUtils fileUtils;
 
     Cluster() {
         //
@@ -31,12 +36,16 @@ public class Cluster {
 
     void onStart(@Observes StartupEvent ev) {
         System.out.println("Cluster startup");
-//        shoppLists = new ConcurrentHashMap<>();
-//        replicateShoppLists = new ConcurrentHashMap<>();
+        shoppLists = fileUtils.readShoppLists();
+        replicateShoppLists = fileUtils.readReplicateShoppLists();
 //        nodes = new ConcurrentHashMap<>();
 //        nodeHashes = new TreeMap<>();
     }
 
+    void onStop(@Observes ShutdownEvent ev) {
+        System.out.println("Cluster shutdown");
+        writeListsOnDisk();
+    }
 
     public void updateClusterHashNodes() {
         nodeHashes.clear();
@@ -51,6 +60,11 @@ public class Cluster {
         printShoppList(shoppLists);
         System.out.printf("[%s, %s] Replicate Shopping Lists: %n", node.getHashId(), node.getIp());
         printShoppList(replicateShoppLists);
+    }
+
+    public void writeListsOnDisk() {
+        shoppLists.forEach((k, v) -> fileUtils.writeShoppList(k, v));
+        replicateShoppLists.forEach((k, v) -> fileUtils.writeShoppList(k, v));
     }
 
     private void printShoppList(Map<String, ORMap> shoppLists) {

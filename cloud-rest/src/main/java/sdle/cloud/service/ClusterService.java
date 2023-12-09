@@ -48,6 +48,7 @@ public class ClusterService extends BaseService {
 
     private void heartBeat() {
         cluster.printStatus(node);
+        cluster.writeListsOnDisk();
         //System.out.printf(" heartbeat failures: %s%n", heartbeatFailures);
     }
 

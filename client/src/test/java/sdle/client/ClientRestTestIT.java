@@ -9,6 +9,7 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
@@ -32,9 +33,17 @@ public class ClientRestTestIT {
 
     static String hashId;
 
+    static String oldUserDir;
+
+    @AfterAll
+    static void tearDown() {
+        System.setProperty("user.dir", oldUserDir);
+    }
+
     @SuppressWarnings("ResultOfMethodCallIgnored")
     @BeforeEach
     void setup() {
+        oldUserDir = System.getProperty("user.dir");
         mapper = new ObjectMapper();
         restClient = WebClient.create(Vertx.vertx(), new WebClientOptions().setProtocolVersion(HttpVersion.HTTP_1_1).setDefaultPort(7788).setConnectTimeout(2000));
         File dataDir = Paths.get("target", "data").toFile();
@@ -102,11 +111,11 @@ public class ClientRestTestIT {
         ORMap serializedShoppList = new LocalStorage().getLocalShoppLists().get(hashId);
         System.out.println(serializedShoppList);
 
-        assertEquals(2, serializedShoppList.get(KEY_ARROZ).read());
+        assertEquals(1, serializedShoppList.get(KEY_ARROZ).read());
         assertEquals(1, serializedShoppList.getMap().size());
 
         shoppList.join(serializedShoppList);
-        assertEquals(3, shoppList.get(KEY_ARROZ).read());
+        assertEquals(2, shoppList.get(KEY_ARROZ).read());
         assertEquals(1, shoppList.getMap().size());
 
 
@@ -120,7 +129,7 @@ public class ClientRestTestIT {
         shoppList.join(shoppList2);
         System.out.println(shoppList);
 
-        assertEquals(13, shoppList.get(KEY_ARROZ).read());
+        assertEquals(12, shoppList.get(KEY_ARROZ).read());
         assertEquals(1, shoppList.getMap().size());
 
     }
@@ -136,8 +145,8 @@ public class ClientRestTestIT {
 
         Optional<HttpResponse<Buffer>> response = sendSync(restClient, SERVER_ADDR, HttpMethod.PUT, "/api/shopp/list", null);
         if (response.isEmpty()) return; // if cloud is not online, no need to continue test
-
         String newShoppListHash = response.get().bodyAsString();
+
         System.out.println(newShoppListHash);
         sendSync(restClient, SERVER_ADDR, HttpMethod.POST, String.format("/api/shopp/list/%s/inc/%s/%s", newShoppListHash, KEY_ARROZ, 2), null);
         sendSync(restClient, SERVER_ADDR, HttpMethod.POST, String.format("/api/shopp/list/%s/dec/%s/%s", newShoppListHash, KEY_ARROZ, 1), null);
