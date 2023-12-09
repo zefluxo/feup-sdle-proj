@@ -5,6 +5,7 @@ import lombok.Data;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 // Implementation only allows for mapping Strings to CCounters
 @Data
@@ -14,8 +15,7 @@ public class ORMap {
     private DotKernel<String> kernel = new DotKernel<>();
     private Map<String, CCounter> map = new HashMap<>();
 
-    public ORMap() {
-    }
+    public ORMap() {}
 
     public ORMap(String id) {
         this.id = id;
@@ -24,8 +24,8 @@ public class ORMap {
     // for replicating
     public ORMap(ORMap map) {
         this.id = map.id;
-        this.kernel = map.kernel;
-        this.map = map.map;
+        this.kernel = new DotKernel<String>(map.kernel.context());
+        this.map = map.map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     public String id() {
@@ -36,9 +36,7 @@ public class ORMap {
         return this.map;
     }
 
-    public DotContext context() {
-        return this.kernel.context();
-    }
+    public DotContext context() { return this.kernel.context(); }
 
     public CCounter get(String key) {
 
@@ -49,7 +47,7 @@ public class ORMap {
 
     public void put(String key, Integer value) {
 
-        CCounter counter = new CCounter(context());
+        CCounter counter = new CCounter();
         counter.inc(value);
         this.kernel.add(this.id, key);
         this.map.put(key, counter);

@@ -177,5 +177,43 @@ class ORMapTest {
         orMap1.join(orMap2);
         System.out.println(orMap1);
     }
+
+    @Test
+    public void anEvenMoreComplexJoin() {
+
+        ORMap map1 = new ORMap("A");
+        ORMap map2 = new ORMap("B");
+
+        map1.put("x", 2);
+
+        map2.join(map1);
+        assertEquals(2, map2.get("x").read());
+
+        map2.remove("x");
+        map2.put("x", 1);
+
+        assertEquals(1, map2.get("x").read());
+
+        map1.inc("x", 1);
+        assertEquals(3, map1.get("x").read());
+
+        map1.join(map2);
+        assertEquals(4, map1.get("x").read());
+
+    }
+
+     @Test
+    public void joinOnMultipleKeys() {
+
+         ORMap map1 = new ORMap("A");
+         ORMap map2 = new ORMap("B");
+
+         map1.put("a", 1); map1.put("b", 2); map1.put("c", 3);
+         map2.put("a", 3); map2.put("b", 4); map2.put("c", 6);
+
+         map1.join(map2);
+         System.out.println(map1);
+
+     }
 }
 
