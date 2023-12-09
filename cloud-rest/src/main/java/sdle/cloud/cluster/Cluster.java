@@ -18,9 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Singleton
 public class Cluster {
 
-    // TODO: a ideia eh depois usar aqui um "CRDMap", simplificando a questao da concorrencia
-    Map<String, ORMap> shoppLists; // = new ConcurrentHashMap<>();
-    Map<String, ORMap> replicateShoppLists;// = new ConcurrentHashMap<>();
+    Map<String, ORMap> shoppLists;
+    Map<String, ORMap> replicateShoppLists;
 
     Map<String, Object> nodes = new ConcurrentHashMap<>();
     TreeMap<String, String> nodeHashes = new TreeMap<>();
@@ -53,8 +52,8 @@ public class Cluster {
     }
 
     public void printStatus(Node node) {
-        //System.out.printf("[%s, %s] Nodes:          %s%n", node.getHashId(), node.getIp(), nodes);
-        System.out.printf("[%s, %s] Node hashes:      %s%n", node.getHashId(), node.getIp(), nodeHashes);
+        //System.out.printf("[%s, %s] Nodes: %n%s%n", node.getHashId(), node.getIp(), nodes);
+        System.out.printf("[%s, %s] Node hashes: %n%s%n", node.getHashId(), node.getIp(), nodeHashes);
         System.out.printf("[%s, %s] Shopping Lists: %n", node.getHashId(), node.getIp());
         printShoppList(shoppLists);
         System.out.printf("[%s, %s] Replicate Shopping Lists: %n", node.getHashId(), node.getIp());

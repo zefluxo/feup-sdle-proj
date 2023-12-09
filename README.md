@@ -34,16 +34,19 @@ cd client
 mvn clean package
 
 # criar nova lista
-java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar new  
+java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar createList  
+
+# apagar uma lista
+java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar deleteList -id=9CF0689CE73223EFE490A5089A04BFE4  
 
 # adicionar/incrementar novo item 
-java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar incItem -id 9CF0689CE73223EFE490A5089A04BFE4 -n=arroz -q=2 
+java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar incItem -id=9CF0689CE73223EFE490A5089A04BFE4 -n=arroz -q=2 
 
 # diminuir quatidade de um determinado item (em caso do resultado fosse negativo, fica 0) 
-java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar decItem -id 9CF0689CE73223EFE490A5089A04BFE4 -n=arroz -q=1 
+java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar decItem -id=9CF0689CE73223EFE490A5089A04BFE4 -n=arroz -q=1 
 
-# lista todos as listas (as listas ficam localmente gravadas na pasta "data")
-java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar all 
+# mostra todas as listas que estao localmente gravadas na pasta "data" (apos aptentativa de syncronizacao com a cloud)
+java -jar .\target\client-1.0-SNAPSHOT.one-jar.jar allLists 
 
 ```
 

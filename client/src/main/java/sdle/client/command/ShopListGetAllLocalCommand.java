@@ -3,7 +3,7 @@ package sdle.client.command;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-        name = "all"
+        name = "allLists"
 )
 public class ShopListGetAllLocalCommand extends BaseShoppListCommand implements Runnable {
     @Override

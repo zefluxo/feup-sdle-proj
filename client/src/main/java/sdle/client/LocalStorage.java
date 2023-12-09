@@ -61,6 +61,11 @@ public class LocalStorage {
     }
 
     @SneakyThrows
+    public boolean deleteFromDisk(String hashId) {
+        return Paths.get(dataDir, hashId).toFile().delete();
+    }
+
+    @SneakyThrows
     public void writeOnDisk(String hashId) {
         new ObjectMapper().writer().writeValue(Paths.get(dataDir, hashId).toFile(), localShoppLists.get(hashId));
     }
@@ -75,6 +80,19 @@ public class LocalStorage {
         }
         synchroniseShoppList(new ORMap(), hashId);
         return hashId;
+    }
+
+    public void deleteShoppList(String hashId) {
+        localShoppLists.remove(hashId);
+
+        Optional<HttpResponse<Buffer>> response = cloudRestAdapter.
+                sendSync(SERVER_HOST, HttpMethod.DELETE, String.format("/api/shopp/list/%s", hashId));
+        if (response.isPresent() && response.get().statusCode() == 200) {
+            System.out.printf("Shopping list %s removed from cloud%n", hashId);
+        }
+        if (deleteFromDisk(hashId)) {
+            System.out.printf("Shopping list %s removed from local storage%n", hashId);
+        }
     }
 
     @SneakyThrows

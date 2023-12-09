@@ -3,7 +3,7 @@ package sdle.client.command;
 import picocli.CommandLine;
 
 @CommandLine.Command(
-        name = "new"
+        name = "createList"
 )
 public class ShoppListCreateCommand extends BaseShoppListCommand implements Runnable {
     @Override

@@ -23,6 +23,10 @@ public interface NodeConfiguration {
     @WithDefault("7788")
     Integer getNodePort();
 
+    @WithName("replicationFactor")
+    @WithDefault("2")
+    Integer getReplicationFactor();
+
     @WithName("dataDir")
     @WithDefault("data")
     String getDataDir();

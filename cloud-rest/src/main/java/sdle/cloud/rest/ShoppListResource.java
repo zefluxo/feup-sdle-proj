@@ -16,13 +16,6 @@ public class ShoppListResource implements AutoCloseable {
     @Inject
     public ShoppListService shoppListService;
 
-    @GET
-    @Path("/list/{hash}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ORMap getList(@PathParam String hash) {
-        return shoppListService.processGetList(hash);
-    }
-
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
@@ -30,6 +23,29 @@ public class ShoppListResource implements AutoCloseable {
     public String newList() {
         return shoppListService.processPutList(HashUtils.getRandomHash(), new ORMap(UUID.randomUUID().toString()));
     }
+
+
+    @GET
+    @Path("/list/{hash}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ORMap getList(@PathParam String hash) {
+        return shoppListService.processGetList(hash);
+    }
+
+    @DELETE
+    @Path("/list/{hash}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String deleteList(@PathParam String hash) {
+        return shoppListService.processDeleteList(hash);
+    }
+
+    @DELETE
+    @Path("/replicate/{hash}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String deleteReplicatedList(@PathParam String hash) {
+        return shoppListService.processDeleteReplicatedList(hash);
+    }
+
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)

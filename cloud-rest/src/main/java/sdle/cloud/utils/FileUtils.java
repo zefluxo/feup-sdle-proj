@@ -37,10 +37,13 @@ public class FileUtils {
     }
 
     @PostConstruct
+    @SneakyThrows
     public void onStart() {
-        shoppListsDir = Paths.get(nodeConfiguration.getDataDir(), "shoppLists");
-        replicateShoppListsDir = Paths.get(nodeConfiguration.getDataDir(), "replicateShoppLists");
-        nodePath = Paths.get(nodeConfiguration.getDataDir(), "node");
+        String dataDir = Paths.get(nodeConfiguration.getDataDir()).toString();
+        //boolean mkdir = Paths.get(dataDir).toFile().mkdirs();
+        shoppListsDir = Paths.get(dataDir, "shoppLists");
+        replicateShoppListsDir = Paths.get(dataDir, "replicateShoppLists");
+        nodePath = Paths.get(dataDir, "node");
         System.out.printf("Creating data dirs (post-construct): %s%n%s, %s%n",
                 nodeConfiguration.getDataDir(),
                 shoppListsDir.toFile().mkdirs(),
@@ -72,8 +75,17 @@ public class FileUtils {
     }
 
     public void writeReplicateShoppList(String hashId, ORMap shoppList) {
-        writeList(shoppListsDir, hashId, shoppList);
+        writeList(replicateShoppListsDir, hashId, shoppList);
     }
+
+    public boolean deleteShoppList(String hashId) {
+        return Paths.get(shoppListsDir.toString(), hashId).toFile().delete();
+    }
+
+    public boolean deleteReplicateShoppList(String hashId) {
+        return Paths.get(replicateShoppListsDir.toString(), hashId).toFile().delete();
+    }
+
 
     @SneakyThrows
     public void writeList(Path dir, String hashId, ORMap shoppList) {

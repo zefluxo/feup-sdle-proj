@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 import lombok.SneakyThrows;
 import sdle.cloud.cluster.Cluster;
 import sdle.cloud.cluster.Node;
+import sdle.cloud.utils.FileUtils;
 import sdle.crdt.implementations.ORMap;
 
 import java.util.ArrayList;
@@ -26,6 +27,8 @@ public class ShoppListService extends BaseService {
 
     @Inject
     Cluster cluster;
+    @Inject
+    FileUtils fileUtils;
 
     ShoppListService() {
         //
@@ -87,6 +90,44 @@ public class ShoppListService extends BaseService {
     }
 
     @SneakyThrows
+    public String processDeleteList(String listHashId) {
+        System.out.printf("DELETE LIST process %s%n", listHashId);
+        String ownerIp = getListOwner(cluster, node, listHashId);
+//        System.out.printf("%s, %s, %s%n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()));
+        String reply = REPLY_OK;
+        if (ownerIp.equals(node.getIp())) {
+            cluster.getShoppLists().remove(listHashId);
+            fileUtils.deleteShoppList(listHashId);
+            List<String> replicaHashes = getReplicateHashes();
+            final List<Future<HttpResponse<Buffer>>> futures = new ArrayList<>();
+            replicaHashes.forEach(hash -> futures.add(restClient.delete(cluster.getNodeHashes().get(hash),
+                    String.format("/api/shopp/replicate/%s", listHashId)).send()));
+            futures.forEach(f -> {
+                try {
+                    f.toCompletionStage().toCompletableFuture().get();
+                } catch (InterruptedException | ExecutionException e) {
+                    System.out.println("Error on delete : " + e.getMessage());
+                }
+            });
+        } else {
+            String url = String.format("/api/shopp/list/%s", listHashId);
+            reply = restClient.delete(ownerIp, url)
+                    .send().toCompletionStage().toCompletableFuture().get().bodyAsString();
+
+        }
+        System.out.printf("Returning : %s%n", reply);
+        return reply;
+    }
+
+    @SneakyThrows
+    public String processDeleteReplicatedList(String listHashId) {
+        System.out.printf("DELETE REPLICATED LIST process %s%n", listHashId);
+        cluster.getReplicateShoppLists().remove(listHashId);
+        fileUtils.deleteReplicateShoppList(listHashId);
+        return REPLY_OK;
+    }
+
+    @SneakyThrows
     public String processPutItem(String listHashId, String name, Integer quantity, boolean isInc) {
         String incOrDec = isInc ? "inc" : "dec";
         System.out.printf("CHANGE ITEM process %s (%s) %s %s  %n", listHashId, name, quantity, incOrDec);
@@ -140,7 +181,7 @@ public class ShoppListService extends BaseService {
         while (iterator.hasNext()) {
             next = iterator.next();
             if (next.equals(node.getHashId())) {
-                for (int i = 1; i < (Math.min(REPLICATE_FACTOR, cluster.getNodeHashes().size())); i++) {
+                for (int i = 1; i < (Math.min(node.getConfig().getReplicationFactor(), cluster.getNodeHashes().size())); i++) {
                     if (!iterator.hasNext()) {
                         iterator = hashes.iterator();
                     }
@@ -164,4 +205,5 @@ public class ShoppListService extends BaseService {
         }
         return hashId;
     }
+
 }

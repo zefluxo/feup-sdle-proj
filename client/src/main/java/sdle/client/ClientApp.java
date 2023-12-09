@@ -13,6 +13,7 @@ import sdle.client.command.*;
                 ShopListGetAllLocalCommand.class,
                 ShoppListIncItemCommand.class,
                 ShoppListDecItemCommand.class,
+                ShoppListDeleteCommand.class,
         }
 
 )
