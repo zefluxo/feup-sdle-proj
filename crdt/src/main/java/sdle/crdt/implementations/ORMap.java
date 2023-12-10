@@ -23,7 +23,7 @@ public class ORMap {
 
     // for replicating
     public ORMap(ORMap map) {
-        this.kernel = new DotKernel<String>(map.kernel.context());
+        this.kernel = new DotKernel<String>(map.kernel);
         this.map = map.map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 

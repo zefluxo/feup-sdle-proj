@@ -15,6 +15,10 @@ public class DotKernel<V> {
 
     public DotKernel() { this.context = new DotContext(); }
     public DotKernel(DotContext context) { this.context = new DotContext(context); }
+    public DotKernel(DotKernel<V> kernel) {
+        this.dotMap = kernel.dotMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        this.context = new DotContext(kernel.context);
+    }
 
     public Map<Pair<String, Integer>, V> map() { return this.dotMap; }
     public DotContext context() { return this.context; }

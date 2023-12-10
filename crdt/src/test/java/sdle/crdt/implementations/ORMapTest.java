@@ -225,12 +225,15 @@ class ORMapTest {
 
         map1.put("feijao", 1);
         map.join(map1);
-        System.out.println(map);
+        System.out.println(map.getKernel());
         assertEquals(1, map.get("feijao").read());
 
         map2.put("feijao", 2);
+        map2.put("arroz", 3);
         map.join(map2);
+        System.out.println(map.getKernel());
         assertEquals(3, map.get("feijao").read());
+        assertEquals(3, map.get("arroz").read());
 
      }
 }
