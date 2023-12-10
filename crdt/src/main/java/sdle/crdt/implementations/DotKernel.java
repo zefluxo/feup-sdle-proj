@@ -14,7 +14,7 @@ public class DotKernel<V> {
     private DotContext context;
 
     public DotKernel() { this.context = new DotContext(); }
-    public DotKernel(DotContext context) { this.context = context; }
+    public DotKernel(DotContext context) { this.context = new DotContext(context); }
 
     public Map<Pair<String, Integer>, V> map() { return this.dotMap; }
     public DotContext context() { return this.context; }

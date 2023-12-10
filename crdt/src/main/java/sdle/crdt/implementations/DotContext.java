@@ -4,11 +4,18 @@ import lombok.Data;
 import sdle.crdt.utils.Pair;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Data
 public class DotContext {
 
     public Map<String, Integer> causalContext = new HashMap<>();
+
+    public DotContext() {}
+    public DotContext(DotContext context) {
+        this.causalContext = context.causalContext.entrySet().stream()
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
 
     public boolean contains(String id) { return this.causalContext.containsKey(id); }
     public Integer max(String id) { return this.contains(id) ? causalContext.get(id) : 0; }

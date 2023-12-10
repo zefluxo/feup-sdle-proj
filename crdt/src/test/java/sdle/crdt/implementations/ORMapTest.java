@@ -215,5 +215,23 @@ class ORMapTest {
          System.out.println(map1);
 
      }
+
+     @Test
+    public void test() {
+
+        ORMap map = new ORMap();
+        ORMap map1 = new ORMap(map);
+        ORMap map2 = new ORMap(map);
+
+        map1.put("feijao", 1);
+        map.join(map1);
+        System.out.println(map);
+        assertEquals(1, map.get("feijao").read());
+
+        map2.put("feijao", 2);
+        map.join(map2);
+        assertEquals(3, map.get("feijao").read());
+
+     }
 }
 

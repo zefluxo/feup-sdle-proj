@@ -23,7 +23,6 @@ public class ORMap {
 
     // for replicating
     public ORMap(ORMap map) {
-        this.id = map.id;
         this.kernel = new DotKernel<String>(map.kernel.context());
         this.map = map.map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
@@ -75,7 +74,7 @@ public class ORMap {
     public void join(ORMap otherMap) {
 
         Map<String, CCounter> newMap = new HashMap<>();
-        this.kernel.join(otherMap.kernel, false);
+        this.kernel.join(otherMap.kernel);
 
         for (String key : kernel.values()) {
 
