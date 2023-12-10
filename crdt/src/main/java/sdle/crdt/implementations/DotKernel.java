@@ -22,6 +22,7 @@ public class DotKernel<V> {
 
     public Map<Pair<String, Integer>, V> map() { return this.dotMap; }
     public DotContext context() { return this.context; }
+    public void setContext(DotContext context) { this.context = context; }
 
     public Set<V> values() {
 

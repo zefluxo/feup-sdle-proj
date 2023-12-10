@@ -46,7 +46,7 @@ public class ORMap {
 
     public void put(String key, Integer value) {
 
-        CCounter counter = new CCounter();
+        CCounter counter = new CCounter(kernel.context());
         counter.inc(value);
         this.kernel.add(this.id, key);
         this.map.put(key, counter);
@@ -74,7 +74,11 @@ public class ORMap {
     public void join(ORMap otherMap) {
 
         Map<String, CCounter> newMap = new HashMap<>();
+
+        DotContext ctxCopy = new DotContext(this.kernel.context());
         this.kernel.join(otherMap.kernel);
+        DotContext ctxMerged = new DotContext(this.kernel.context());
+        this.kernel.setContext(ctxCopy);
 
         for (String key : kernel.values()) {
 
@@ -85,11 +89,13 @@ public class ORMap {
             else if (otherValue == null) newMap.put(key, thisValue);
             else {
                 thisValue.join(otherValue);
+                this.kernel.setContext(ctxCopy);
                 newMap.put(key, thisValue);
             }
 
         }
 
+        this.kernel.setContext(ctxMerged);
         this.map = newMap;
 
     }
