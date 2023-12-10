@@ -41,17 +41,16 @@ public class ShoppListService extends BaseService {
 
     @SneakyThrows
     public String processPutList(String hashId, ORMap shoppList) {
-        System.out.printf("PUT LIST process %s, %s %n", hashId, shoppList);
-
+        System.out.printf("PUT LIST process %s, %s %s%n", hashId, shoppList, shoppList.getKernel());
         String ownerIp = getListOwner(cluster, node, hashId);
         //System.out.printf("%s, %s, %s, %s %n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()), shoppList);
         if (ownerIp.equals(node.getIp())) {
             cluster.getShoppLists().putIfAbsent(hashId, new ORMap());
-            cluster.getShoppLists().get(hashId).join(shoppList);
+            ORMap cloudShoppList = cluster.getShoppLists().get(hashId);
+            cloudShoppList.join(shoppList);
+            cluster.getShoppLists().put(hashId, new ORMap(cloudShoppList));
             cluster.getReplicateShoppLists().remove(hashId);
-
-            sendReplicateList(hashId, shoppList);
-            System.out.println(cluster.getShoppLists());
+            sendReplicateList(hashId, cluster.getShoppLists().get(hashId));
         } else {
             String url = String.format("/api/shopp/list/%s", hashId);
             if (shoppList.getMap().isEmpty()) {

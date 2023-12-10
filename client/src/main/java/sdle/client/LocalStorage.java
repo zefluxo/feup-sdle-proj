@@ -1,6 +1,7 @@
 package sdle.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.HttpResponse;
@@ -28,36 +29,27 @@ public class LocalStorage {
 
     public LocalStorage() {
         mapper = new ObjectMapper();
-        synchronise();
+        readAllFromDisk();
     }
 
     @SneakyThrows
     public void readAllFromDisk() {
         try (Stream<Path> pathsStream = Files.walk(Paths.get(dataDir), 1)
-                .filter(Files::isRegularFile).onClose(() -> System.out.println("The Stream is closed"))) {
+                .filter(Files::isRegularFile)) {
             for (Path path : pathsStream.toList()) {
                 localShoppLists.put(path.getFileName().toString(), new ObjectMapper().readValue(new String(Files.readAllBytes(path)), ORMap.class));
             }
         }
     }
 
-    public void synchronise() {
-        System.out.println("Synchronizing lists from cloud");
-        readAllFromDisk();
-        localShoppLists.forEach((k, v) -> {
-            sendShopListToCloud(k, v);
-            System.out.printf("%s synchronized: %s%n", k, v);
-        });
-    }
-
-    public void synchroniseShoppList(ORMap shoppList, String hashId) {
-        if (localShoppLists.containsKey(hashId)) {
-            localShoppLists.get(hashId).join(shoppList);
-        } else {
-            localShoppLists.put(hashId, shoppList);
-        }
-        writeOnDisk(hashId);
-    }
+//    public void synchronise() {
+//        System.out.println("Synchronizing lists from cloud");
+//        readAllFromDisk();
+//        localShoppLists.forEach((k, v) -> {
+//            sendShopListToCloud(k, v);
+//            System.out.printf("%s synchronized: %s%n", k, v);
+//        });
+//    }
 
     @SneakyThrows
     public boolean deleteFromDisk(String hashId) {
@@ -66,7 +58,7 @@ public class LocalStorage {
 
     @SneakyThrows
     public void writeOnDisk(String hashId) {
-        new ObjectMapper().writer().writeValue(Paths.get(dataDir, hashId).toFile(), localShoppLists.get(hashId));
+        new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writer().writeValue(Paths.get(dataDir, hashId).toFile(), localShoppLists.get(hashId));
     }
 
     public String newShoppList() {
@@ -77,7 +69,8 @@ public class LocalStorage {
         } else {
             hashId = HashUtils.getRandomHash();
         }
-        synchroniseShoppList(new ORMap(), hashId);
+        localShoppLists.put(hashId, new ORMap());
+        writeOnDisk(hashId);
         return hashId;
     }
 
@@ -97,14 +90,15 @@ public class LocalStorage {
     @SneakyThrows
     public ORMap getShoppList(String hashId) {
         localShoppLists.putIfAbsent(hashId, new ORMap());
-
+        ORMap shoppList = localShoppLists.get(hashId);
+        sendShopListToCloud(hashId, shoppList);
         Optional<HttpResponse<Buffer>> response = cloudRestAdapter.
                 sendSync(SERVER_HOST, HttpMethod.GET, String.format("/api/shopp/list/%s", hashId));
-        ORMap shoppList = localShoppLists.get(hashId);
         if (response.isPresent() && response.get().statusCode() == 200) {
-            shoppList.join(mapper.readValue(response.get().bodyAsString(), ORMap.class));
+            ORMap cloudShoppList = mapper.readValue(response.get().bodyAsString(), ORMap.class);
+            localShoppLists.put(hashId, new ORMap(cloudShoppList));
         }
-        return shoppList;
+        return localShoppLists.get(hashId);
     }
 
     private void sendShopListToCloud(String hashId, ORMap shoppList) {
@@ -112,17 +106,13 @@ public class LocalStorage {
     }
 
     public void incOrDecItem(String hashId, String name, String quantity, boolean isInc) {
-        localShoppLists.putIfAbsent(hashId, new ORMap());
         if (isInc) {
             localShoppLists.get(hashId).inc(name, Integer.valueOf(quantity));
         } else {
             localShoppLists.get(hashId).dec(name, Integer.valueOf(quantity));
         }
-        cloudRestAdapter.sendSync(
-                SERVER_HOST, HttpMethod.POST,
-                String.format("/api/shopp/list/%s/%s/%s/%s", hashId, (isInc ? "inc" : "dec"), name, quantity));
+        getShoppList(hashId);
         writeOnDisk(hashId);
-        System.out.println(localShoppLists.get(hashId));
     }
 
     public void incItem(String hashId, String name, String quantity) {

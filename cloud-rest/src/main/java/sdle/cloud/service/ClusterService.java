@@ -21,11 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @ApplicationScoped
 public class ClusterService extends BaseService {
-    //    private static final Integer MAX_HEARTBEAT_FAILURES = 2;
     private final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(10);
-
-    //    private final Map<String, Integer> heartbeatFailures = new ConcurrentHashMap<>();
-
     @Inject
     NodeConfiguration config;
     @Inject

@@ -1,6 +1,7 @@
 package sdle.cloud.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
@@ -25,12 +26,6 @@ public class FileUtils {
     private Path shoppListsDir;
     private Path replicateShoppListsDir;
     private Path nodePath;
-    //private static final Path DATA_DIR = Paths.get(System.getProperty("sdle.cloud.dataDir", "data"));
-//
-//    private static final Path SHOPP_LISTS_DIR = Paths.get(DATA_DIR.toString(), "shoppLists");
-//    private static final Path REPLICATE_SHOPP_LISTS_DIR = Paths.get(DATA_DIR.toString(), "replicateShoppLists");
-//
-//    private static final Path NODE_PATH = Paths.get(DATA_DIR.toString(), "node");
 
     public FileUtils() {
         //
@@ -62,7 +57,7 @@ public class FileUtils {
     public Map<String, ORMap> readLists(Path dir) {
         Map<String, ORMap> shoppLists = new HashMap<>();
         try (Stream<Path> pathsStream = Files.walk(dir, 1)
-                .filter(Files::isRegularFile).onClose(() -> System.out.println("The Stream is closed"))) {
+                .filter(Files::isRegularFile)) {
             for (Path path : pathsStream.toList()) {
                 shoppLists.put(path.getFileName().toString(), new ObjectMapper().readValue(Files.readString(path), ORMap.class));
             }
@@ -89,7 +84,7 @@ public class FileUtils {
 
     @SneakyThrows
     public void writeList(Path dir, String hashId, ORMap shoppList) {
-        new ObjectMapper().writer().writeValue(Paths.get(dir.toString(), hashId).toFile(), shoppList);
+        new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writer().writeValue(Paths.get(dir.toString(), hashId).toFile(), shoppList);
     }
 
     @SneakyThrows

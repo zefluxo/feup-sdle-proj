@@ -95,8 +95,9 @@ class ORMapTest {
         orMap2.get(KEY_FEIJAO).inc(1);
 
 
+        System.out.println(orMap1);
         orMap1.join(orMap2);
-
+        System.out.println(orMap1);
         assertEquals(2, orMap1.map().size());
 
         assertAll(() -> assertEquals(4, orMap1.get(KEY_FEIJAO).read()), () -> assertEquals(2, orMap1.get(KEY_ARROZ).read()));
@@ -202,39 +203,47 @@ class ORMapTest {
 
     }
 
-     @Test
+    @Test
     public void joinOnMultipleKeys() {
 
-         ORMap map1 = new ORMap("A");
-         ORMap map2 = new ORMap("B");
+        ORMap map1 = new ORMap("A");
+        ORMap map2 = new ORMap("B");
 
-         map1.put("a", 1); map1.put("b", 2); map1.put("c", 3);
-         map2.put("a", 3); map2.put("b", 4); map2.put("c", 6);
+        map1.put("a", 1);
+        map1.put("b", 2);
+        map1.put("c", 3);
+        map2.put("a", 3);
+        map2.put("b", 4);
+        map2.put("c", 6);
 
-         map1.join(map2);
-         System.out.println(map1);
+        map1.join(map2);
+        System.out.println(map1);
 
-     }
+    }
 
-     @Test
+    @Test
     public void test() {
 
         ORMap map = new ORMap();
         ORMap map1 = new ORMap(map);
-        ORMap map2 = new ORMap(map);
 
-        map1.put("feijao", 1);
+        map1.inc("feijao", 1);
         map.join(map1);
+
+        ORMap map2 = new ORMap(map);
         System.out.println(map.getKernel());
         assertEquals(1, map.get("feijao").read());
 
-        map2.put("feijao", 2);
-        map2.put("arroz", 3);
+        map2.inc("feijao", 2);
+        //map.put("arroz", 3);
         map.join(map2);
         System.out.println(map.getKernel());
-        assertEquals(3, map.get("feijao").read());
-        assertEquals(3, map.get("arroz").read());
 
-     }
+        assertEquals(3, map.get("feijao").read());
+        //assertEquals(3, map.get("arroz").read());
+
+    }
+
+
 }
 

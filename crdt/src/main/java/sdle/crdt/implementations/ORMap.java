@@ -15,7 +15,8 @@ public class ORMap {
     private DotKernel<String> kernel = new DotKernel<>();
     private Map<String, CCounter> map = new HashMap<>();
 
-    public ORMap() {}
+    public ORMap() {
+    }
 
     public ORMap(String id) {
         this.id = id;
@@ -35,7 +36,9 @@ public class ORMap {
         return this.map;
     }
 
-    public DotContext context() { return this.kernel.context(); }
+    public DotContext context() {
+        return this.kernel.context();
+    }
 
     public CCounter get(String key) {
 
@@ -45,8 +48,7 @@ public class ORMap {
     }
 
     public void put(String key, Integer value) {
-
-        CCounter counter = new CCounter(kernel.context());
+        CCounter counter = new CCounter(UUID.randomUUID().toString());
         counter.inc(value);
         this.kernel.add(this.id, key);
         this.map.put(key, counter);
@@ -64,10 +66,12 @@ public class ORMap {
 
     public void inc(String key, Integer value) {
         this.get(key).inc(value);
+        this.map.put(key, new CCounter(this.get(key)));
     }
 
     public void dec(String key, Integer value) {
         this.get(key).dec(value);
+        this.map.put(key, new CCounter(this.get(key)));
     }
 
 
@@ -75,10 +79,7 @@ public class ORMap {
 
         Map<String, CCounter> newMap = new HashMap<>();
 
-        DotContext ctxCopy = new DotContext(this.kernel.context());
         this.kernel.join(otherMap.kernel);
-        DotContext ctxMerged = new DotContext(this.kernel.context());
-        this.kernel.setContext(ctxCopy);
 
         for (String key : kernel.values()) {
 
@@ -89,15 +90,11 @@ public class ORMap {
             else if (otherValue == null) newMap.put(key, thisValue);
             else {
                 thisValue.join(otherValue);
-                this.kernel.setContext(ctxCopy);
                 newMap.put(key, thisValue);
             }
 
         }
-
-        this.kernel.setContext(ctxMerged);
         this.map = newMap;
-
     }
 
     public void reset() {

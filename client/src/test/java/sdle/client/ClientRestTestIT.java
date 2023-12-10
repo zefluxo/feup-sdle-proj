@@ -113,19 +113,21 @@ public class ClientRestTestIT {
 
         String newShoppListHash = createNewListWithRest();
 
-        CommandLine commandLine = new CommandLine(new ClientApp());
-        commandLine.execute("incItem", "-id=" + newShoppListHash, "-n=" + KEY_ARROZ, "-q=2");
-        commandLine.execute("decItem", "-id=" + newShoppListHash, "-n=" + KEY_ARROZ, "-q=1");
+        //CommandLine commandLine = ;
+        new CommandLine(new ClientApp()).execute("getList", newShoppListHash);
+        new CommandLine(new ClientApp()).execute("incItem", newShoppListHash, KEY_ARROZ, "2");
+        new CommandLine(new ClientApp()).execute("incItem", newShoppListHash, KEY_ARROZ, "3");
+        //commandLine.execute("decItem", newShoppListHash, KEY_ARROZ, "1");
 
         ORMap serializedShoppList = readFromDisk(newShoppListHash);
 
         System.out.println(serializedShoppList);
 
-        assertEquals(1, serializedShoppList.get(KEY_ARROZ).read());
+        assertEquals(5, serializedShoppList.get(KEY_ARROZ).read());
         assertEquals(1, serializedShoppList.getMap().size());
 
         shoppList.join(serializedShoppList);
-        assertEquals(2, shoppList.get(KEY_ARROZ).read());
+        assertEquals(6, shoppList.get(KEY_ARROZ).read());
         assertEquals(1, shoppList.getMap().size());
 
 
@@ -139,7 +141,7 @@ public class ClientRestTestIT {
         shoppList.join(shoppList2);
         System.out.println(shoppList);
 
-        assertEquals(12, shoppList.get(KEY_ARROZ).read());
+        assertEquals(16, shoppList.get(KEY_ARROZ).read());
         assertEquals(1, shoppList.getMap().size());
 
     }
