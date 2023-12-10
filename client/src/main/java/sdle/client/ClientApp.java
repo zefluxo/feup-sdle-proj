@@ -27,6 +27,6 @@ public class ClientApp implements Runnable {
     @Override
     @SneakyThrows
     public void run() {
-        new LocalStorage().synchronise();
+        //
     }
 }

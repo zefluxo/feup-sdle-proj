@@ -16,6 +16,7 @@ import picocli.CommandLine;
 import sdle.crdt.implementations.ORMap;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
@@ -35,6 +36,7 @@ public class ClientRestTestIT {
     static String hashId;
 
     static String oldUserDir;
+    static File dataDir = Paths.get("target", "data").toFile();
 
     @AfterAll
     static void tearDown() {
@@ -47,7 +49,6 @@ public class ClientRestTestIT {
         oldUserDir = System.getProperty(USER_DIR_PROPERTY);
         mapper = new ObjectMapper();
         restClient = WebClient.create(Vertx.vertx(), new WebClientOptions().setProtocolVersion(HttpVersion.HTTP_1_1).setDefaultPort(7788).setConnectTimeout(2000));
-        File dataDir = Paths.get("target", "data").toFile();
         dataDir.mkdirs();
         String[] entries = dataDir.list();
         assert entries != null;
@@ -56,7 +57,7 @@ public class ClientRestTestIT {
             currentFile.delete();
         }
         System.setProperty("user.dir", "target");
-        assert 0 == new CommandLine(new ClientApp()).execute("new");
+        assert 0 == new CommandLine(new ClientApp()).execute("createList");
         hashId = Objects.requireNonNull(dataDir.list())[0];
     }
 
@@ -69,7 +70,7 @@ public class ClientRestTestIT {
     @SneakyThrows
     @Test
     public void testNewList() {
-        assert 0 == new CommandLine(new ClientApp()).execute("new");
+        assert 0 == new CommandLine(new ClientApp()).execute("createList");
     }
 
     @SneakyThrows
@@ -93,7 +94,12 @@ public class ClientRestTestIT {
     @SneakyThrows
     @Test
     public void testListAll() {
-        assert 0 == new CommandLine(new ClientApp()).execute("all");
+        assert 0 == new CommandLine(new ClientApp()).execute("allLists");
+    }
+
+    @SneakyThrows
+    public ORMap readFromDisk(String hashId) {
+        return new ObjectMapper().readValue(new String(Files.readAllBytes(Paths.get(dataDir.toString(), hashId))), ORMap.class);
     }
 
     @SneakyThrows
@@ -105,11 +111,14 @@ public class ClientRestTestIT {
         shoppList.inc(KEY_ARROZ, 1);
         assertEquals(1, shoppList.get(KEY_ARROZ).read());
 
-        CommandLine commandLine = new CommandLine(new ClientApp());
-        commandLine.execute("incItem", "-id=" + hashId, "-n=" + KEY_ARROZ, "-q=2");
-        commandLine.execute("decItem", "-id=" + hashId, "-n=" + KEY_ARROZ, "-q=1");
+        String newShoppListHash = createNewListWithRest();
 
-        ORMap serializedShoppList = new LocalStorage().getLocalShoppLists().get(hashId);
+        CommandLine commandLine = new CommandLine(new ClientApp());
+        commandLine.execute("incItem", "-id=" + newShoppListHash, "-n=" + KEY_ARROZ, "-q=2");
+        commandLine.execute("decItem", "-id=" + newShoppListHash, "-n=" + KEY_ARROZ, "-q=1");
+
+        ORMap serializedShoppList = readFromDisk(newShoppListHash);
+
         System.out.println(serializedShoppList);
 
         assertEquals(1, serializedShoppList.get(KEY_ARROZ).read());
@@ -135,6 +144,12 @@ public class ClientRestTestIT {
 
     }
 
+    private String createNewListWithRest() {
+        Optional<HttpResponse<Buffer>> response = sendSync(restClient, SERVER_ADDR, HttpMethod.PUT, "/api/shopp/list", null);
+        return response.map(HttpResponse::bodyAsString).orElse(null);
+
+    }
+
     @SneakyThrows
     @Test
     public void integrationTestUsingRestOnly() {
@@ -144,15 +159,13 @@ public class ClientRestTestIT {
         shoppList.inc(KEY_ARROZ, 1);
         assertEquals(1, shoppList.get(KEY_ARROZ).read());
 
-        Optional<HttpResponse<Buffer>> response = sendSync(restClient, SERVER_ADDR, HttpMethod.PUT, "/api/shopp/list", null);
-        if (response.isEmpty()) return; // if cloud is not online, no need to continue test
-        String newShoppListHash = response.get().bodyAsString();
 
+        String newShoppListHash = createNewListWithRest();
         System.out.println(newShoppListHash);
         sendSync(restClient, SERVER_ADDR, HttpMethod.POST, String.format("/api/shopp/list/%s/inc/%s/%s", newShoppListHash, KEY_ARROZ, 2), null);
         sendSync(restClient, SERVER_ADDR, HttpMethod.POST, String.format("/api/shopp/list/%s/dec/%s/%s", newShoppListHash, KEY_ARROZ, 1), null);
         //System.out.println(newShoppListHash);
-        response = sendSync(restClient, SERVER_ADDR, HttpMethod.GET, String.format("/api/shopp/list/%s", newShoppListHash), null);
+        Optional<HttpResponse<Buffer>> response = sendSync(restClient, SERVER_ADDR, HttpMethod.GET, String.format("/api/shopp/list/%s", newShoppListHash), null);
         ORMap serializedShoppList = mapper.readValue(response.get().bodyAsString(), ORMap.class);
         System.out.println(serializedShoppList);
 

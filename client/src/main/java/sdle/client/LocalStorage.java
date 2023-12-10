@@ -45,7 +45,6 @@ public class LocalStorage {
         System.out.println("Synchronizing lists from cloud");
         readAllFromDisk();
         localShoppLists.forEach((k, v) -> {
-            v.join(getShoppList(k));
             sendShopListToCloud(k, v);
             System.out.printf("%s synchronized: %s%n", k, v);
         });
@@ -119,12 +118,11 @@ public class LocalStorage {
         } else {
             localShoppLists.get(hashId).dec(name, Integer.valueOf(quantity));
         }
-
         cloudRestAdapter.sendSync(
                 SERVER_HOST, HttpMethod.POST,
                 String.format("/api/shopp/list/%s/%s/%s/%s", hashId, (isInc ? "inc" : "dec"), name, quantity));
         writeOnDisk(hashId);
-        System.out.print(localShoppLists.get(hashId).getMap());
+        System.out.println(localShoppLists.get(hashId));
     }
 
     public void incItem(String hashId, String name, String quantity) {
