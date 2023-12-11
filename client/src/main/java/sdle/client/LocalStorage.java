@@ -98,6 +98,8 @@ public class LocalStorage {
             ORMap cloudShoppList = mapper.readValue(response.get().bodyAsString(), ORMap.class);
             localShoppLists.put(hashId, new ORMap(cloudShoppList));
         }
+        System.out.printf("Result: %s %s%n", hashId, localShoppLists.get(hashId));
+        writeOnDisk(hashId);
         return localShoppLists.get(hashId);
     }
 
@@ -112,7 +114,6 @@ public class LocalStorage {
             localShoppLists.get(hashId).dec(name, Integer.valueOf(quantity));
         }
         getShoppList(hashId);
-        writeOnDisk(hashId);
     }
 
     public void incItem(String hashId, String name, String quantity) {
@@ -123,4 +124,8 @@ public class LocalStorage {
         incOrDecItem(hashId, name, quantity, false);
     }
 
+    public void deleteItem(String hashId, String name) {
+        localShoppLists.get(hashId).remove(name);
+        getShoppList(hashId);
+    }
 }

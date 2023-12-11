@@ -14,6 +14,7 @@ import sdle.client.command.*;
                 ShoppListIncItemCommand.class,
                 ShoppListDecItemCommand.class,
                 ShoppListDeleteCommand.class,
+                ShoppListDeleteItemCommand.class
         }
 
 )
