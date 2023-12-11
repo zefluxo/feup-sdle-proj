@@ -53,13 +53,8 @@ public class ShoppListService extends BaseService {
             sendReplicateList(hashId, cluster.getShoppLists().get(hashId));
         } else {
             String url = String.format("/api/shopp/list/%s", hashId);
-            if (shoppList.getMap().isEmpty()) {
-                return restClient.put(ownerIp, url).send()
-                        .toCompletionStage().toCompletableFuture().get().bodyAsString();
-            } else {
-                return restClient.post(ownerIp, url).sendJson(shoppList)
-                        .toCompletionStage().toCompletableFuture().get().bodyAsString();
-            }
+            return restClient.post(ownerIp, url).sendJson(shoppList)
+                    .toCompletionStage().toCompletableFuture().get().bodyAsString();
         }
         System.out.printf("Returning : %s%n", hashId);
         return hashId;
