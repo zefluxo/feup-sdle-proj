@@ -1,9 +1,11 @@
 # Shopping List - SDLE
 
-For now, just a "archetype" with working load balancer, with a simple ZeroMQ REQ/REP app)
+For now, just a "archetype" with working load balancer, with a simple ZeroMQ REQ/REP app
 
 - Needs docker installed (tested with docker desktop on widows v4.25.1)
 - NEED jdk 17+ and maven installed
+
+Video and presentation can be found in the [docs](https://github.com/zefluxo/feup-sdle-proj/tree/main/docs) folder.
 
 ### CRDT
 ```
@@ -41,7 +43,7 @@ mvn clean package
 # windows
 .\runClient.cmd incItem EC9DA33DBC159D8B7ECDF7898409BB41 feijao 1
 
-# diminuir quatidade de um determinado item (em caso do resultado fosse negativo, fica 0) 
+# diminuir quantidade de um determinado item (caso o resultado seja negativo, fica 0) 
 # linux
 ./runClient.sh "decItem EC9DA33DBC159D8B7ECDF7898409BB41 arroz 2"
 # windows
@@ -57,7 +59,7 @@ mvn clean package
 # windows
 .\runClient.cmd deleteList
 
-# mostra todas as listas que estao localmente gravadas na pasta "data" (apos tentativa de syncronizacao com a cloud)
+# mostrar todas as listas que localmente armazenadas na pasta "data" (apos tentativa de sincronização com a cloud)
 ./runClient.sh allLists 
 # windows
 .\runClient.cmd allLists
@@ -68,6 +70,6 @@ mvn -q compile exec:java -Dexec.args="decItem EC9DA33DBC159D8B7ECDF7898409BB41 a
 
 ```
 
-#### Para simular outro cliente, pode se copiar a pasta "client" para outro local e executar os mesmo comandos 
+#### Para simular outro cliente, pode-se copiar a pasta "client" para outro local e executar os mesmo comandos 
 
  
