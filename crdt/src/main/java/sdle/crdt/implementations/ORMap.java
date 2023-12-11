@@ -11,19 +11,25 @@ import java.util.stream.Collectors;
 @Data
 public class ORMap {
 
-    private String id = UUID.randomUUID().toString();
-    private DotKernel<String> kernel = new DotKernel<>();
-    private Map<String, CCounter> map = new HashMap<>();
+    private String id;
+    private DotKernel<String> kernel;
+    private Map<String, CCounter> map;
 
     public ORMap() {
+        this.id = UUID.randomUUID().toString();
+        this.kernel = new DotKernel<>();
+        this.map = new HashMap<>();
     }
 
     public ORMap(String id) {
         this.id = id;
+        this.kernel = new DotKernel<>();
+        this.map = new HashMap<>();
     }
 
     // for replicating
     public ORMap(ORMap map) {
+        this.id = UUID.randomUUID().toString();
         this.kernel = new DotKernel<String>(map.kernel);
         this.map = map.map.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
@@ -48,7 +54,7 @@ public class ORMap {
     }
 
     public void put(String key, Integer value) {
-        CCounter counter = new CCounter(UUID.randomUUID().toString());
+        CCounter counter = new CCounter(this.kernel.context());
         counter.inc(value);
         this.kernel.add(this.id, key);
         this.map.put(key, counter);
@@ -66,19 +72,16 @@ public class ORMap {
 
     public void inc(String key, Integer value) {
         this.get(key).inc(value);
-        this.map.put(key, new CCounter(this.get(key)));
     }
 
     public void dec(String key, Integer value) {
         this.get(key).dec(value);
-        this.map.put(key, new CCounter(this.get(key)));
     }
 
 
     public void join(ORMap otherMap) {
 
         Map<String, CCounter> newMap = new HashMap<>();
-
         this.kernel.join(otherMap.kernel);
 
         for (String key : kernel.values()) {
@@ -95,6 +98,7 @@ public class ORMap {
 
         }
         this.map = newMap;
+
     }
 
     public void reset() {

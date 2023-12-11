@@ -8,17 +8,21 @@ import java.util.UUID;
 @Data
 public class CCounter {
 
-    public DotKernel<Integer> dotKernel = new DotKernel<>();
-    private String id = UUID.randomUUID().toString();
+    public DotKernel<Integer> dotKernel;
+    private String id;
 
     public CCounter() {
+        this.id = UUID.randomUUID().toString();
+        this.dotKernel = new DotKernel<>();
     }
 
     public CCounter(String id) {
         this.id = id;
+        this.dotKernel = new DotKernel<>();
     }
 
     public CCounter(DotContext context) {
+        this.id = UUID.randomUUID().toString();
         this.dotKernel = new DotKernel<>(context);
     }
 
@@ -41,6 +45,7 @@ public class CCounter {
 
         for (Pair<String, Integer> key : this.dotKernel.map().keySet()) {
             Integer currValue = this.dotKernel.map().get(key);
+
             if (key.getFirst().equals(this.id)) {
                 base = Math.max(base, currValue);
                 this.dotKernel.remove(key);

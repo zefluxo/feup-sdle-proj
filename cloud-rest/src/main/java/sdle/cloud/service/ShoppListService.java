@@ -48,7 +48,7 @@ public class ShoppListService extends BaseService {
             cluster.getShoppLists().putIfAbsent(hashId, new ORMap());
             ORMap cloudShoppList = cluster.getShoppLists().get(hashId);
             cloudShoppList.join(shoppList);
-            cluster.getShoppLists().put(hashId, new ORMap(cloudShoppList));
+            cluster.getShoppLists().put(hashId, cloudShoppList);
             cluster.getReplicateShoppLists().remove(hashId);
             sendReplicateList(hashId, cluster.getShoppLists().get(hashId));
         } else {
@@ -129,19 +129,17 @@ public class ShoppListService extends BaseService {
         //System.out.printf("%s, %s, %s%n", ownerIp, node.getIp(), ownerIp.equals(node.getIp()));
         String reply;
         if (ownerIp.equals(node.getIp())) {
-            ORMap shoppList = cluster.getShoppLists().get(listHashId);
-            if (shoppList == null) {
-                reply = null;
+            ORMap shoppList = new ORMap(cluster.getShoppLists().get(listHashId));
+
+            if (isInc) {
+                shoppList.inc(name, quantity);
             } else {
-                if (isInc) {
-                    shoppList.inc(name, quantity);
-                } else {
-                    shoppList.dec(name, quantity);
-                }
-                sendReplicateList(listHashId, shoppList);
-                //System.out.println(cluster.getShoppLists());
-                reply = REPLY_OK;
+                shoppList.dec(name, quantity);
             }
+            sendReplicateList(listHashId, shoppList);
+            //System.out.println(cluster.getShoppLists());
+            reply = REPLY_OK;
+
         } else {
             String url = String.format("/api/shopp/list/%s/%s/%s/%s", listHashId, incOrDec, name, quantity);
             reply = restClient.post(ownerIp, url)

@@ -9,16 +9,23 @@ import java.util.stream.Collectors;
 @Data
 public class DotContext {
 
-    public Map<String, Integer> causalContext = new HashMap<>();
+    public Map<String, Integer> causalContext;
 
-    public DotContext() {}
+    public DotContext() {
+        this.causalContext = new HashMap<>();
+    }
     public DotContext(DotContext context) {
         this.causalContext = context.causalContext.entrySet().stream()
                             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    public boolean contains(String id) { return this.causalContext.containsKey(id); }
-    public Integer max(String id) { return this.contains(id) ? causalContext.get(id) : 0; }
+    public boolean contains(Pair<String, Integer> key) {
+        if (this.causalContext.containsKey(key.getFirst())) {
+            return this.causalContext.get(key.getFirst()) >= key.getSecond();
+        }
+        return false;
+    }
+    public Integer max(String id) { return this.causalContext.containsKey(id) ? causalContext.get(id) : 0; }
     
     public Integer next(String id) { 
         Integer next = this.max(id) + 1;
