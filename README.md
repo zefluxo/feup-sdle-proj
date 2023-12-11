@@ -47,15 +47,20 @@ mvn clean package
 # windows
 .\runClient.cmd decItem EC9DA33DBC159D8B7ECDF7898409BB41 feijao 1
 
-# apagar uma lista
-./runClient.sh allLists 
+# apagar item de uma lista
+./runClient.sh "deleteItem D573D4EB5D7A9539427D6483A3DBB546 arroz" 
 # windows
-.\runClient.cmd allLists
+.\runClient.cmd deleteItem D573D4EB5D7A9539427D6483A3DBB546 arroz
 
-# mostra todas as listas que estao localmente gravadas na pasta "data" (apos tentativa de syncronizacao com a cloud)
+# apagar uma lista
 ./runClient.sh deleteList
 # windows
 .\runClient.cmd deleteList
+
+# mostra todas as listas que estao localmente gravadas na pasta "data" (apos tentativa de syncronizacao com a cloud)
+./runClient.sh allLists 
+# windows
+.\runClient.cmd allLists
 
 
 all client commands can be do by calling mvn, eg:
